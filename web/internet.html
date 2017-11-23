@@ -1,0 +1,113 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>视频分析</title>
+<link href="css/core.css" rel="stylesheet" type="text/css"/>
+<script src="js/jquery-1.7.2.min.js" type="text/javascript"></script>
+<script type="text/javascript" src="dist/jquery.cookie.js"></script>
+<script src="js/uc-ui.js" type="text/javascript"></script>
+<script src="js/player.js" type="text/javascript"></script>
+<!-- 验证框架 -->
+<script type="text/javascript" src="validationengine/js/languages/jquery.validationEngine-zh_CN.js"></script>
+<script type="text/javascript" src="validationengine/js/jquery.validationEngine.js"></script>
+<link rel="stylesheet" type="text/css" href="validationengine/css/validationEngine.jquery.css" media="screen" />
+<!-- 验证框架end -->
+<script type="text/javascript">
+	//验证信息
+	$(function(){
+		//验证
+		jQuery("#addSystem").validationEngine({
+			inlineValidation: false, //提交表单时验证 
+			promptPosition : "centerRight",	
+			success : false
+		});	
+	});	
+	var session = $.cookie("sessionid");
+	var params3 = {
+		"method":"get_ip_addr",
+		"sessionid":session	
+	}
+	$.post("/upapi",JSON.stringify(params3),function(d){
+		if(d.retcode == 0){
+			if(d.is_support == false){
+				window.top.sure_show("不支持ip地址查询和设置！");
+				//$("#ip").attr("readonly","readonly").addClass("readonly");
+				//$("#mask").attr("readonly","readonly").addClass("readonly");
+				//$("#gateway").attr("readonly","readonly").addClass("readonly");
+				return false;
+			}else{
+				$(".is_support").removeClass("hide");	
+				$("#ip").val(d.ip);
+				$("#mask").val(d.mask);
+				$("#gateway").val(d.gateway);
+			}
+		}
+	});
+	function son(){
+		var paramm = {
+			"ip" : $("#ip").val(), 
+			"mask" : $("#mask").val(),
+			"gateway" : $("#gateway").val()
+		}
+		return paramm;
+	}
+	 
+	var d = null;
+	var dia_log = {
+		"title":'网络设置',
+		"width":300,
+		"height":150,
+		"url":"internet-sure.html",
+		"btn_title":"确定",
+		save:function(){
+			d.iframe.contentWindow.set(d);
+		}
+	}
+	//重启设备
+	$(".btn-submit").live("click",function(){
+		if(!$("#addSystem").validationEngine("validate")){
+			return false;	
+		}
+		d = dialog(dia_log);
+	});
+</script>
+</head>
+<body>
+	<div class="list-crimp">
+        <div class="crimp-top">网络设置<span class="crimp-top-title"><span class="txt">隐藏</span><strong></strong></span></div>
+        <div class="crimp-content">
+            <div class="crimp-content-margin">
+            	<form id="addSystem">
+                    <table class="two-table alert-two-table">
+                        <tr>
+                            <th><span class="red">*</span>ip地址：</th>
+                            <td colspan="3">
+                                <input type="text" id="ip" class="two-ipt validate[required,custom[ipv4]]"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th><span class="red">*</span>子网掩码：</th>
+                            <td colspan="3">
+                                <input type="text" id="mask" class="two-ipt validate[required,custom[ipv4]]"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th><span class="red">*</span>默认网关：</th>
+                            <td colspan="3">
+                                <input type="text" id="gateway" class="two-ipt validate[required,custom[ipv4]]"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th></th>
+                            <td>
+                                <span class="btn btn-submit"><span class="btn-img"></span><span class="btn-title">保存</span></span>
+                            </td>
+                        </tr>
+                    </table>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

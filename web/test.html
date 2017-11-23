@@ -1,0 +1,122 @@
+<HTML>
+<HEAD>
+    <TITLE>ActiveX 实验</TITLE>
+    <script type='text/javascript' language='javascript'>
+
+        function test1()
+        {
+            try { 
+               //这是从代码中创建ActiveX的实例
+               var myobject = new ActiveXObject("UpViewPlay");
+               if (myobject) {
+                   var div = document.getElementById('divMsg');
+                   div.innerHTML = '这是从ActiveX Dll中返回的值：' + myobject.GetData();
+               }
+               else
+                  alert('插件实例化失败。。');
+            }
+            catch(e)
+            {
+               alert(e.message);
+            }
+
+       }
+
+       function test2() 
+       {
+           try {
+               //这是直接在html中实例化ActiveX
+                var type=document.getElementById("dev_type").value;
+                var addr=document.getElementById("dev_addr").value;
+                var user=document.getElementById("dev_user").value;
+                var passw=document.getElementById("dev_passw").value;
+                var chanid=document.getElementById("dev_chanid").value;
+
+               MyActiveX.Play2(type,addr,user,passw,chanid,0);
+           } 
+           catch (e) 
+           {
+               alert(e.message);
+           }
+
+       }
+       
+       //speed为0则为停止
+       function ptzdown(speed) 
+       {
+           try {
+               //这是直接在html中实例化ActiveX
+               MyActiveX.PtzDown(speed);
+  //              alert(speed);
+           } 
+           catch (e) 
+           {
+               alert(e.message);
+           }
+
+       }
+//speed为0则为停止
+       function ptzleft(speed) 
+       {
+           try {
+               //这是直接在html中实例化ActiveX
+               MyActiveX.PtzLeft(speed);
+  //              alert(speed);
+           } 
+           catch (e) 
+           {
+               alert(e.message);
+           }
+
+       }
+//speed为0则为停止
+       function ptzright(speed) 
+       {
+           try {
+               //这是直接在html中实例化ActiveX
+               MyActiveX.PtzRight(speed);
+  //              alert(speed);
+           } 
+           catch (e) 
+           {
+               alert(e.message);
+           }
+
+       }
+//speed为0则为停止
+       function ptzup(speed) 
+       {
+           try {
+               //这是直接在html中实例化ActiveX
+               MyActiveX.PtzUp(speed);
+  //              alert(speed);
+           } 
+           catch (e) 
+           {
+               alert(e.message);
+           }
+
+       }
+
+    </SCRIPT>
+</HEAD>
+<BODY>
+    <object id="MyActiveX" name="MyActiveX" classid="CLSID:337F3085-E809-43F0-9D6D-7670C2AB11EF"  width="704" height="576"></object> 
+    <br />
+    <input type="text" name="type" value="hik" id="dev_type">type</input>
+    <input type="text" name="addr" value="192.168.0.250" id="dev_addr"/>
+    <input type="text" name="user" value="admin" id="dev_user"/>
+    <input type="text" name="passw" value="12345" id="dev_passw"/>
+    <input type="text" name="chanid" value="34" id="dev_chanid"/>
+    <INPUT TYPE="button" value="播放" onClick="test2()">
+    <br />
+    <INPUT TYPE="button" value="上" onmousedown="ptzup(5)" onmouseup="ptzup(0)">
+    <INPUT TYPE="button" value="下" onmousedown="ptzdown(5)" onmouseup="ptzdown(0)">
+    <INPUT TYPE="button" value="左" onmousedown="ptzleft(5)" onmouseup="ptzleft(0)">
+    <INPUT TYPE="button" value="右" onmousedown="ptzright(5)" onmouseup="ptzright(0)">
+    <br />
+	<INPUT TYPE="button" value="登录" id="login">
+    <div id="divMsg"><div>
+	<video src="nodes/1/live/hls/m3u8.M3U8" controls="controls" autoplay="autoplay" width="500" height="250">“测试视频格式”</video>
+</BODY>
+</HTML>

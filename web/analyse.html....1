@@ -1,0 +1,1104 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>视频分析</title>
+<link href="css/core.css" rel="stylesheet" type="text/css"/>
+<script src="js/jquery-1.7.2.min.js" type="text/javascript"></script>
+<script type="text/javascript" src="dist/jquery.cookie.js"></script>
+<script src="js/uc-ui.js" type="text/javascript"></script>
+<script src="js/player.js" type="text/javascript"></script>
+<link rel="stylesheet" type="text/css" href="validationengine/css/validationEngine.jquery.css" media="screen" />
+<script type="text/javascript" src="validationengine/js/languages/jquery.validationEngine-zh_CN.js"></script>
+<script type="text/javascript" src="validationengine/js/jquery.validationEngine.js"></script>
+<script type="text/javascript">
+	var session = $.cookie("sessionid");
+	var user = window.top.$("#index-user").text();
+	var type = "upsms";
+	var chanid;
+	var txt;
+	var canvas;
+	var paramss = {};
+	var clickNum=0; //点击坐标次数(可摆放区域)
+	var clickNum2=0; //点击坐标次数(不可摆放区域)
+	var zuobiao1 = []; //数组存取点击时的坐标
+	var url = window.location.href;
+	try{
+		url = url.substring(url.indexOf("://")+3);
+		url = url.substring(0,url.indexOf("/"));
+	}catch(e){};
+	var addr = url;
+	var passw = $.cookie("videopassw");
+	var parent;
+	var ff = window.top.isIE(false);   //判断浏览器是否安装控
+	$(function(){
+		if(ff){
+		}else{
+			$.getScript("js/upview.js?v=" + new Date().getTime());
+		}
+	});
+	//得到码流
+	var typeMain = $.cookie("typeMain");
+	if(typeMain){
+		stype = typeMain;
+	}else{
+		stype = 'sub';	
+	}
+<<<<<<< .mine
+	//计算，生成canvas的个数和位置
+	var pars = {}; 
+	function _canvas(nums,types,par){
+		var wid = $('.canvas-show').width();
+		var hei = $('.canvas-show').height();
+		var canvas = $('<canvas class="canvas">'+'</canvas>');	
+		$('.canvas-show').append(canvas);	
+		$('.canvas').attr("width",wid);
+		$('.canvas').attr("height",hei);
+		var can = document.getElementsByClassName('canvas')[0];
+		if(can == null) return false;
+		//首先给最外面视频创建一个大画布
+		var context = can.getContext('2d');	
+		context.fillStyle = "rgba(255,255,255,0)"; //填充背景色
+		context.fillRect(0,0,wid,hei);
+		//设置个数
+		//设置位置及大小key_Alert,key_Edge
+		function fill(){
+			context.fillStyle = "";
+			context.strokeStyle = "#00cc00";
+			context.lineWidth = 1;  //边框宽度	
+		}
+		if(types == 'water'){
+			fill();
+			context.strokeRect(par.x,par.y,par.w,par.h);
+			context.fillRect(par.x,par.y,par.w,par.h);	
+		}else if(types =='smog'){
+			fill();
+			context.strokeRect(par.smog[0].x,par.smog[0].y,par.smog[0].w,par.smog[0].h);
+			context.fillRect(par.smog[0].x,par.smog[0].y,par.smog[0].w,par.smog[0].h);	
+			fill();
+			context.strokeRect(par.sky[0].x,par.sky[0].y,par.sky[0].w,par.sky[0].h);
+			context.fillRect(par.sky[0].x,par.sky[0].y,par.sky[0].w,par.sky[0].h);	
+		}else if(types == 'sw'){
+			context.beginPath();
+			var length1 = par.key_Alert.length;
+			for(var i=0; i<length1; i++){
+				if(i==0){
+					context.moveTo(par.key_Alert[i].x,par.key_Alert[i].y);	
+				}else{
+					context.lineTo(par.key_Alert[i].x,par.key_Alert[i].y);	
+				}
+			}
+			context.closePath();
+			context.strokeStyle="#00cc00";
+			context.stroke();
+			
+			context.beginPath();
+			var length2 = par.key_Edge.length;
+			for(var i=0; i<length2; i++){
+				if(i==0){
+					context.moveTo(par.key_Edge[i].x,par.key_Edge[i].y);	
+				}else{
+					context.lineTo(par.key_Edge[i].x,par.key_Edge[i].y);	
+				}
+			}
+			context.closePath();
+			context.strokeStyle="#00cc00";
+			context.stroke();
+		}
+	}
+	/*canvas点击画图*/
+	var lines = [];
+	var water = [];	//存储污水检测的坐标
+	var smog = [];	//存储烟窗检测的坐标
+	var bai = [];	//存储可摆放区域的坐标
+	var bai2 = [];	//存储不可摆放区域的坐标
+	function canvasWrite(){
+		//鼠标点击，画出一个园
+		var wid = $('.canvas-show').width();
+		var hei = $('.canvas-show').height();
+		
+		if($('.canvas-show').find('canvas')[0]==null){
+			canvas = $('<canvas class="canvas">'+'</canvas>');
+			$('.canvas-show').append(canvas);		//只需添加一个canvas画板
+		}
+		$('.canvas').attr("width",wid);
+		$('.canvas').attr("height",hei);
+		var canvas = getCanvas();
+		var context = canvas.getContext('2d');
+		context.fillStyle = "rgba(255,255,255,0)"; //填充背景色
+		context.fillRect(0,0,wid,hei);
+		lines.splice(0,lines.length);
+		canvas.num2=0;
+		clickNum=0;		//切换节点时，点击次数清零
+		clickNum2=0;		//切换节点时，点击次数清零
+	}
+	function newCanvasWrite(){
+		//从新的位置描点
+		var canvas = getCanvas();
+		var context = canvas.getContext('2d');
+		lines.splice(0,lines.length);
+		canvas.num2=0;
+		//clickNum=0;		//切换节点时，点击次数清零
+		//clickNum2=0;	//切换节点时，点击次数清零
+	}
+	//监听点击事件
+	$('.canvas').live('click',function(e){
+			//鼠标点击，画出一个园
+			var wid = $('.canvas-show').width();
+			var hei = $('.canvas-show').height();
+			var canvas = getCanvas();
+			var context = canvas.getContext('2d');
+			var drawColor=$("input[name='radios']:checked").val(); //获取画笔的颜色的值,3绿色,4表示红色
+			var txt=$(".two-select").val();
+			x1 = e.clientX - 26;
+			y1 = e.clientY - 51;
+			arc(x1,y1);
+			//保存百分比，并且传入后台
+			if(txt=='water'){
+				if(water.length>1){
+					alert('只能选择两个点');
+				}else{
+					water.push({
+						x : (x1/wid*100).toFixed(2),
+						y : (y1/hei*100).toFixed(2)	
+					});
+					if(water.length==2){
+						context.strokeStyle="#00cc00";
+						var w1x=(wid*water[0].x/100).toFixed(2);
+						var h1y=(hei*water[0].y/100).toFixed(2);
+						var w2x=(wid*water[1].x/100).toFixed(2);
+						var h2y=(hei*water[1].y/100).toFixed(2);
+						var w=Math.abs(w1x-w2x); //矩形的宽度
+						var h=Math.abs(h1y-h2y); //矩形的宽度			
+						context.strokeRect(w1x,h1y,w,h);
+
+					}
+				}
+			}
+			if(txt=='smog'){
+				if(smog.length>1){
+					alert('只能选择两个点');
+				}else{
+					smog.push({
+						x : (x1/wid*100).toFixed(2),
+						y : (y1/hei*100).toFixed(2)	
+					});
+					if(smog.length==2){
+						context.strokeStyle="#00cc00";
+						var w1x=(wid*smog[0].x/100).toFixed(2);
+						var h1y=(hei*smog[0].y/100).toFixed(2);
+						var w2x=(wid*smog[1].x/100).toFixed(2);
+						var h2y=(hei*smog[1].y/100).toFixed(2);
+						var w=Math.abs(w1x-w2x); //矩形的宽度
+						var h=Math.abs(h1y-h2y); //矩形的宽度
+						context.strokeRect(w1x,h1y,w,h);
+					}
+				}
+			}
+			if(txt=='sw'){
+				if(drawColor=='3'){
+					bai.push({
+						x : (x1/wid*100).toFixed(2),
+						y : (y1/hei*100).toFixed(2)	
+					});
+					clickNum++;
+				}else{
+					bai2.push({
+						x : (x1/wid*100).toFixed(2),
+						y : (y1/hei*100).toFixed(2)	
+					});
+					clickNum2++;
+				}
+				lines.push({
+				x1 : x1,
+				y1 : y1	
+			});
+			if(drawColor=='3'){
+				canvas.num2++;
+				context.beginPath();
+				context.strokeStyle="#00cc00";
+				context.lineWidth = 1;
+				if(canvas.num2 ==1){
+					context.moveTo(x1,y1);
+				}else{
+				//上一次
+				context.lineTo(lines[canvas.num2-2].x1,lines[canvas.num2-2].y1);	
+				context.lineTo(x1,y1);		
+				}
+				context.stroke();
+				context.closePath();
+			}
+			if(drawColor=='4'){
+				canvas.num2++;
+				context.beginPath();
+				context.strokeStyle="#FF0000";
+				context.lineWidth = 1;
+				if(canvas.num2 ==1){
+				context.moveTo(x1,y1);
+				}else{
+				//上一次
+				context.lineTo(lines[canvas.num2-2].x1,lines[canvas.num2-2].y1);		
+				context.lineTo(x1,y1);		
+				}
+				context.stroke();
+				context.closePath();
+			}
+			}
+			
+		});
+	//得到canvas对象
+	function getCanvas(){
+		var canvas = document.getElementsByClassName('canvas')[0];
+		if(canvas == null){
+			return false;	
+		}	
+		return canvas;
+	}
+	//鼠标点击的时候绘制一个圆形
+	function arc(x,y){
+		var canvas = getCanvas();
+		var context = canvas.getContext('2d');
+		context.beginPath(); //创建路径
+		context.arc(x,y,2,0,Math.PI*2,true);	
+		context.closePath();
+		//context.fillStyle = 'rgba(0,238,22,0.6)';
+		//获取画笔的颜色的值,3表示绿色,4表示红色
+		var drawColor=$("input[name='radios']:checked").val(); 
+			if(drawColor=='3'){
+				context.fillStyle="#00cc00";
+			}else{
+				context.fillStyle="#FF0000";
+			}
+		context.fill();	
+	}
+	//画矩形
+	function rectangle(e){
+		//鼠标按下事件
+			
+	}
+||||||| .r821
+=======
+	//计算，生成canvas的个数和位置
+	var pars = {}; 
+	function _canvas(nums,types,par){
+		var wid = $('.canvas-show').width();
+		var hei = $('.canvas-show').height();
+		var canvas = $('<canvas class="canvas">'+'</canvas>');	
+		$('.canvas-show').append(canvas);	
+		$('.canvas').attr("width",wid);
+		$('.canvas').attr("height",hei);
+		var can = document.getElementsByClassName('canvas')[0];
+		if(can == null) return false;
+		//首先给最外面视频创建一个大画布
+		var context = can.getContext('2d');	
+		context.fillStyle = "rgba(255,255,255,0)"; //填充背景色
+		context.fillRect(0,0,wid,hei);
+		//设置个数
+		//设置位置及大小key_Alert,key_Edge
+		function fill(){
+			context.fillStyle = "";
+			context.strokeStyle = "#00cc00";
+			context.lineWidth = 1;  //边框宽度	
+		}
+		if(types == 'water'){
+			fill();
+			context.strokeRect(par.x,par.y,par.w,par.h);
+			context.fillRect(par.x,par.y,par.w,par.h);	
+		}else if(types =='smog'){
+			fill();
+			context.strokeRect(par.smog[0].x,par.smog[0].y,par.smog[0].w,par.smog[0].h);
+			context.fillRect(par.smog[0].x,par.smog[0].y,par.smog[0].w,par.smog[0].h);	
+			fill();
+			context.strokeRect(par.sky[0].x,par.sky[0].y,par.sky[0].w,par.sky[0].h);
+			context.fillRect(par.sky[0].x,par.sky[0].y,par.sky[0].w,par.sky[0].h);	
+		}else if(types == 'sw'){
+			context.beginPath();
+			var length1 = par.key_Alert.length;
+			for(var i=0; i<length1; i++){
+				if(i==0){
+					context.moveTo(par.key_Alert[i].x,par.key_Alert[i].y);	
+				}else{
+					context.lineTo(par.key_Alert[i].x,par.key_Alert[i].y);	
+				}
+			}
+			context.closePath();
+			context.strokeStyle="#00cc00";
+			context.stroke();
+			
+			context.beginPath();
+			var length2 = par.key_Edge.length;
+			for(var i=0; i<length2; i++){
+				if(i==0){
+					context.moveTo(par.key_Edge[i].x,par.key_Edge[i].y);	
+				}else{
+					context.lineTo(par.key_Edge[i].x,par.key_Edge[i].y);	
+				}
+			}
+			context.closePath();
+			context.strokeStyle="#00cc00";
+			context.stroke();
+		}
+	}
+	/*canvas点击画图*/
+	var lines = [];
+	var bai = [];
+	function canvasWrite(){
+		//鼠标点击，画出一个园
+		var wid = $('.canvas-show').width();
+		var hei = $('.canvas-show').height();
+		var canvas = $('<canvas class="canvas">'+'</canvas>');	
+		$('.canvas-show').append(canvas);	
+		$('.canvas').attr("width",wid);
+		$('.canvas').attr("height",hei);
+		var canvas = getCanvas();
+		var context = canvas.getContext('2d');
+		context.fillStyle = "rgba(255,255,255,0)"; //填充背景色
+		context.fillRect(0,0,wid,hei);
+		//监听点击事件
+		var x1,y1;
+		lines.splice(0,lines.length);
+		canvas.num2=0;
+		canvas.addEventListener('click',function(e){
+			canvas.num2++;
+			x1 = e.clientX - 26;
+			y1 = e.clientY - 51;
+			//保存百分比，并且传入后台
+			bai.push({
+				x2 : x1/wid,
+				y2 : y1/hei	
+			});
+			lines.push({
+				x1 : x1,
+				y1 : y1	
+			});
+			arc(x1,y1);
+			context.beginPath();
+			context.strokeStyle="#00cc00";
+			context.lineWidth = 1;
+			if(canvas.num2 ==1){
+				context.moveTo(x1,y1);
+			}else{
+				//上一次
+				context.lineTo(lines[canvas.num2-2].x1,lines[canvas.num2-2].y1);		
+				context.lineTo(x1,y1);		
+			}
+			context.stroke();
+			context.closePath();
+		},false);
+	}
+	//得到canvas对象
+	function getCanvas(){
+		var canvas = document.getElementsByClassName('canvas')[0];
+		if(canvas == null){
+			return false;	
+		}	
+		return canvas;
+	}
+	//鼠标点击的时候绘制一个圆形
+	function arc(x,y){
+		var canvas = getCanvas();
+		var context = canvas.getContext('2d');
+		context.beginPath(); //创建路径
+		context.arc(x,y,2,0,Math.PI*2,true);	
+		context.closePath();
+		context.fillStyle = 'rgba(0,238,22,0.6)';
+		context.fill();		
+	}
+	//画矩形
+	function rectangle(e){
+		//鼠标按下事件
+			
+	}
+>>>>>>> .r859
+	//1.得到监控视频
+	window.top.registerFn(function(treeNode){
+		chanid = treeNode.id;
+		parent = treeNode.isParent;
+		$("#video").text(treeNode.title);
+<<<<<<< .mine
+		//改变画笔颜色时,从新的位置描点
+		$("input[name='radios']").change(function(){
+			newCanvasWrite();
+		});
+		canvasWrite();
+		if(parent){   //判断是否为根节点
+			$(".water").addClass("hide");
+			$(".smog").addClass("hide");
+			$(".sw").addClass("hide");
+			$("input[type='text']").val("");
+			$("input[type='radio'][value='0']").attr("checked","checked");
+			$("#jiance option:first").attr("selected","selected");
+||||||| .r821
+		if(parent){
+=======
+		canvasWrite();
+		if(parent){
+>>>>>>> .r859
+			$(".water").addClass("hide");
+			$(".smog").addClass("hide");
+			$(".sw").addClass("hide");
+			$("input[type='text']").val("");
+			$("input[type='radio'][value='0']").attr("checked","checked");
+			$("#jiance option:first").attr("selected","selected");
+			return false;	
+		}
+		if(ff){
+			$(".player2").addClass("hide");
+			$(".player1").removeClass("hide");
+			$(".player").each(function(){
+				//如果有视频，关闭视频
+				try{
+					pluginStopPlay($(this)[0]);	
+				}catch(e){}
+				startPlay($(this)[0],chanid,stype);
+			});
+		}else{
+			$(".player2").removeClass("hide");
+			$(".player1").addClass("hide");
+			pluginStopPlay2($(".player")[0]);
+			$(".player2").each(function(){
+				try{
+					pluginStopPlay2($(this)[0]);
+				}catch(e){}
+				startPlay2($(this)[0],chanid,stype);
+			});		
+			$(".player").css("width",$(".analyse-video").width());
+			$(".player").css("height",$(".analyse-video").height());	
+		}	
+		var params = {
+			"method":"get_ana_node_info",
+			"sessionid":session,
+			"id":chanid	  //无效的id节点
+		}
+		$.post("/upapi",JSON.stringify(params),function(data){
+		var wid = $('.canvas-show').width();
+		var hei = $('.canvas-show').height();
+		var canvas = getCanvas();
+		var context = canvas.getContext('2d');
+			if(data.retcode == 0){
+				bai=[];		//改变节点时数组元素清零
+				clickNum=0;	//改变节点时点击次数清零
+				clickNum2=0;//改变节点时点击次数清零
+				if(data.enable == "undefined" && JSON.stringify(data.param.type) == "undefined" ){
+					//设置配置信息
+					return false;			
+				}
+				if(data.param == null){
+					//页面刷新
+					$(".water").addClass("hide");
+					$(".smog").addClass("hide");
+					$(".sw").addClass("hide");
+					$("input[type='text']").val("");
+					$("input[type='radio'][value='0']").attr("checked","checked");
+					$("#jiance option:first").attr("selected","selected");
+					return false;
+				}
+				if(data.enable){
+					data.enable = 1;	
+				}else{
+					data.enable = 0;
+				}
+				data.params = pars;
+				$("input[name='radio'][value='"+data.enable+"']").attr("checked",true);
+				$("#jiance").val(data.param.type);
+				$("#jiance").change();
+				//返回类型为water时,绘制图形并赋值
+				if(data.param.type=='water'){
+					var par=data.param;
+					context.strokeStyle="#00cc00";
+					context.strokeRect(par.x,par.y,par.w,par.h);
+					$('#waterX').val(par.x);
+					$('#waterY').val(par.y);
+					$('#waterWidth').val(par.w);
+					$('#waterHeight').val(par.h);
+				}
+				//返回类型为smog时,绘制图形并赋值
+				if(data.param.type=='smog'){
+					var par=data.param.smog[0];
+					context.strokeStyle="#00cc00";
+					context.strokeRect(par.x,par.y,par.w,par.h);
+					$('#smogX').val(par.x);
+					$('#smogY').val(par.y);
+					$('#smogW').val(par.w);
+					$('#smogH').val(par.h);
+				}
+				//返回类型为sw时,绘制图形并赋值
+				if(data.param.type == "sw"){
+					//返回参数的值(可摆放固废存放区域)
+					var key_Edge = data.param.key_Edge;
+					//返回参数的值(不可摆放固废存放区域)
+					var	key_Alert = data.param.key_Alert;				
+					if(key_Edge.length>0){					//当返回有值时，绘制区域
+						
+						context.beginPath();
+						context.moveTo((wid*(key_Edge[0].x)/100).toFixed(2),(hei*(key_Edge[0].y)/100).toFixed(2));
+						for(i=1;i<key_Edge.length;i++){
+							context.lineTo((wid*(key_Edge[i].x)/100).toFixed(2),(hei*(key_Edge[i].y)/100).toFixed(2));
+						}
+						context.strokeStyle="#00cc00";
+						context.closePath();
+						context.stroke();
+					}
+					//返回参数的值(不可摆放固废存放区域)
+					if(key_Alert.length>0){					//当返回有值时，绘制区域
+						context.beginPath();
+						context.moveTo((wid*(key_Alert[0].x)/100).toFixed(2),(hei*(key_Alert[0].y)/100).toFixed(2));
+						for(i=1;i<key_Alert.length;i++){
+							context.lineTo((wid*(key_Alert[i].x)/100).toFixed(2),(hei*(key_Alert[i].y)/100).toFixed(2));
+						}
+						context.strokeStyle="#FF0000";
+						context.closePath();
+						context.stroke();
+					}
+					//获取可摆放固废存放区域下坐标框的个数
+					var key_Edges=$(".zuobiao").length;		
+						if(key_Edges>key_Edge.length){		//坐标框个数多于返回参数的个数,则删除多余的,反之
+							for(var i=0;i<key_Edges-key_Edge.length;i++){	
+								$('.pan-del').trigger('click');
+							}
+						}else{
+							for(var i=0;i<key_Edge.length-key_Edges;i++){
+								$('.pan-add2').trigger('click');
+							}
+						}
+					//获取不可摆放固废存放区域下坐标框的个数
+					var key_Edges=$(".zuobiao2").length;		
+						if(key_Edges>key_Alert.length){		//坐标框个数多于返回参数的个数,则删除多余的,反之
+							for(var i=0;i<key_Edges-key_Alert.length;i++){	
+								$('.pan-del2').trigger('click');
+							}
+						}else{
+							for(var i=0;i<key_Alert.length-key_Edges;i++){
+								$('.pan-add3').trigger('click');
+							}
+						}	
+					var key_Edge = data.param.key_Edge;
+					var key_Alert = data.param.key_Alert;
+					//可摆放固废存放区域
+					var key_Edges=$(".zuobiao").length;
+					if(key_Edges>key_Edge.length){
+						for(var i=0;i<key_Edges-key_Edge.length;i++){
+							$('.pan-del').trigger('click');
+						}
+					}else{
+						for(var i=0;i<key_Edge.length-key_Edges;i++){
+							$('.pan-add2').trigger('click');
+						}
+					}
+					//不可摆放固废存放区域
+					var key_Edges=$(".zuobiao2").length;
+					if(key_Edges>key_Alert.length){
+						for(var i=0;i<key_Edges-key_Alert.length;i++){
+							$('.pan-del2').trigger('click');
+						}
+					}else{
+						for(var i=0;i<key_Alert.length-key_Edges;i++){
+							$('.pan-add2').trigger('click');
+						}
+					}
+					//选择节点时,填入后台返回的数据
+					$(".zuobiao2").each(function(i){
+						//$(this).find("input[name='x2']").val(key_Alert[i].x);
+						//$(this).find("input[name='y2']").val(key_Alert[i].y);
+						var w=(wid*(key_Alert[i].x)/100).toFixed(2);
+						var h=(hei*(key_Alert[i].y)/100).toFixed(2);
+						$(this).find("input[name='x2']").val(w);
+						$(this).find("input[name='y2']").val(h);
+					});
+					//选择节点时,填入后台返回的数据
+					$(".zuobiao").each(function(i){		
+						var w=(wid*(key_Edge[i].x)/100).toFixed(2);
+						var h=(hei*(key_Edge[i].y)/100).toFixed(2);
+						$(this).find("input[name='xx']").val(w);
+						$(this).find("input[name='yy']").val(h);
+					});
+				}
+			}
+		});
+	},window.top.types.TREE_NODE_CLICK);	
+	$(function(){
+		//初始化验证控件
+		/*jQuery("#addAnalyse").validationEngine({
+			inlineValidation: false, //提交表单时验证 
+			success : false,         //false表示全部通过验证了才能提交表单，true表示随时都可以提交表单
+			promptPosition : "bottomLeft"
+		});*/
+		//窗口大小改变事件
+		window.onresize = function(){	
+			$(".player").css("width",$(".analyse-video").width());
+			$(".player").css("height",$(".analyse-video").height());	
+		}
+	});
+	//通过改变下拉框的值 控制显示和隐藏
+	function change(e){
+		txt = e.options[e.selectedIndex].text;	
+		if(txt == "污水检测"){
+			$(".water").removeClass("hide");
+			$(".sw").addClass("hide");	
+			$(".smog").addClass("hide");		
+		}else if(txt == "固废检测"){
+			$(".sw").removeClass("hide");	
+			$(".water").addClass("hide");	
+			$(".smog").addClass("hide");	
+		}else if(txt == "烟窗检测"){
+			$(".smog").removeClass("hide");
+			$(".sw").addClass("hide");	
+			$(".water").addClass("hide");		
+		}else{
+			$(".smog").addClass("hide");		
+			$(".sw").addClass("hide");	
+			$(".water").addClass("hide");		
+		}
+	}
+	//设置配置信息
+	function setInfo(chanid){
+		var wid = $('.canvas-show').width();
+		var hei = $('.canvas-show').height();
+	
+		//获取可摆放固废存放区域下坐标框的个数
+		var key_Edges=$(".zuobiao").length;
+		if(clickNum>key_Edges){
+			for(i=0;i<clickNum-key_Edges;i++){	//保存时,点击坐标次数大于坐标框个数,则增加坐标数,反之
+			$('.pan-add2').trigger('click');	//执行增加坐标的事件
+			}
+		}else{
+			$('.pan-del').trigger('click');
+			var key_Edges=$(".zuobiao").length;	
+			if(clickNum>key_Edges){
+				for(i=0;i<clickNum-key_Edges;i++){
+				$('.pan-add2').trigger('click');	
+				}
+			}
+		}
+		//获取不可摆放固废存放区域下坐标框的个数
+		var key_Edges=$(".zuobiao2").length;
+		if(clickNum2>key_Edges){
+			for(i=0;i<clickNum2-key_Edges;i++){	//保存时,点击坐标次数大于坐标框个数,则增加坐标数,反之
+			$('.pan-add3').trigger('click');	//执行增加坐标的事件
+			}
+		}else{
+			$('.pan-del2').trigger('click');
+			var key_Edges=$(".zuobiao2").length;	
+			if(clickNum2>key_Edges){
+				for(i=0;i<clickNum2-key_Edges;i++){
+				$('.pan-add3').trigger('click');	
+				}
+			}
+		}
+		//保存时,填入点击画板坐标的数据(污水检测)
+		if(water.length==2){
+			//起始点的坐标
+			var w1x=(wid*water[0].x/100).toFixed(2);
+			var h1y=(hei*water[0].y/100).toFixed(2);
+			//终点的坐标
+			var w2x=(wid*water[1].x/100).toFixed(2);
+			var h2y=(hei*water[1].y/100).toFixed(2);
+			var w=Math.abs(w1x-w2x).toFixed(2); //矩形的宽度
+			var h=Math.abs(h1y-h2y).toFixed(2); //矩形的高度
+			$('#waterX').val(w1x);
+			$('#waterY').val(h1y);
+			$('#waterWidth').val(w);
+			$('#waterHeight').val(h);
+			water=[];
+		}
+		//保存时,填入点击画板坐标的数据(烟窗检测)
+		if(smog.length==2){
+			//起始点的坐标
+			var w1x=(wid*smog[0].x/100).toFixed(2);
+			var h1y=(hei*smog[0].y/100).toFixed(2);
+			//终点的坐标
+			var w2x=(wid*smog[1].x/100).toFixed(2);
+			var h2y=(hei*smog[1].y/100).toFixed(2);
+			var w=Math.abs(w1x-w2x).toFixed(2); //矩形的宽度
+			var h=Math.abs(h1y-h2y).toFixed(2); //矩形的高度
+			$('#smogX').val(w1x);
+			$('#smogY').val(h1y);
+			$('#smogH').val(h);
+			$('#smogW').val(w);
+			smog=[];
+		}
+		//保存时,填入点击画板坐标的数据(可摆放区域)
+		if(bai.length!=0){
+			$(".zuobiao").each(function(i){	
+			var w=(wid*(bai[i].x)/100).toFixed(2);
+			var h=(hei*(bai[i].y)/100).toFixed(2);
+			var xx = parseInt($(this).find("input[name='xx']").val(w));
+			var yy = parseInt($(this).find("input[name='yy']").val(h));
+			});
+		}
+		//保存时,填入点击画板坐标的数据(不可摆放)
+		if(bai2.length!=0){
+			$(".zuobiao2").each(function(i){		
+			var w=(wid*(bai2[i].x)/100).toFixed(2);
+			var h=(hei*(bai2[i].y)/100).toFixed(2);
+			var xx = parseInt($(this).find("input[name='x2']").val(w));
+			var yy = parseInt($(this).find("input[name='y2']").val(h));
+			});
+		}
+		
+		var txts=$(".two-select").val(); 
+		if(txts=='sw'){
+			if(clickNum==0||clickNum2==0){
+				alert('至少选择两个区域');
+				return false;
+			}
+		}
+			//设置配置信息 污水监测 
+		var param = {"type":"water"};
+		var params2 = {
+			"method":"set_ana_node_info",
+			"sessionid":session,
+			"id":chanid,	
+			"enable":$("input[name='radio']:checked").val() == "1" ? true : false,
+			"param" : {
+				"type": "water",
+				"x":($("#waterX").val()),
+				"y":($("#waterY").val()),
+				"w":($("#waterWidth").val()),
+				"h":($("#waterHeight").val())
+			}
+		}
+		//烟窗监测
+		var params4 = {
+			"method":"set_ana_node_info",
+			"sessionid":session,
+			"id":chanid,	
+			"enable":$("input[name='radio']:checked").val() == "1" ? true : false,
+			"param":{
+				"type": "smog",
+				"sky":[{
+					"x":null,
+					"y":null,
+					"h":null,
+					"w":null
+				}],
+				"smog":[{
+					"x":($("#smogX").val()),
+					"y":($("#smogY").val()),
+					"w":($("#smogW").val()),
+					"h":($("#smogH").val())
+				}]
+			}		
+		}
+		//设置配置信息 固废监测
+		var params3 = {
+			"method":"set_ana_node_info",
+			"sessionid":session,
+			"id":chanid,	
+			"enable":$("input[name='radio']:checked").val() == "1" ? true : false,
+			"param":{
+				"type":"sw",
+				"key_Alert":bai2,
+				"key_Edge":bai		//上面所有点击坐标的集合
+			}	
+		}
+		if(txt == "污水检测"){
+			paramss = {};
+			paramss = params2;
+		}else if(txt == "固废检测"){
+			paramss = {};
+			paramss = params3;
+		}else if(txt == "烟窗检测"){
+			paramss = {};
+			paramss = params4;
+		}else{
+			return false;	
+		}
+		
+		//定义提交的时候验证
+		if(!$("#addAnalyse").validationEngine("validate")) {
+			return;
+		}
+		
+		$.post("/upapi",JSON.stringify(paramss),function(data){
+			window.top.validateSession(data);
+			if(data.retcode == 0){
+				window.top.sure_show("配置成功!");	
+			}else if(data.retcode == -3004){
+				window.top.sure_show("该操作需要管理员权限！");	
+			}	
+		});	
+	}
+	//动态添加坐标节点
+	var x = 3;
+	var titX = "边界点x坐标";
+	var titY = "边界点y坐标";
+	var swX = "swX";
+	var swY = "swY";
+	$(".pan-add2").live("click",function(){
+		x++;
+		var tr = $("<tr>"
+		 				+"<th><span class='pan-add pan-add2'>*</span>"+(titX+x)
+						+"：</th>"
+						+"<td>"
+							+'<input type="text" class="two-ipt validate[custom[numberOnly],maxSize[12]]" name="xx" id="'+(swX+x)+'"/>'
+						+"</td>"
+						+"<th>"+(titY+x)
+						+"：</th>"
+						+"<td>"
+							+'<input type="text" class="two-ipt validate[custom[numberOnly],maxSize[12]]" name="yy" id="'+(swY+x)+'"/>'
+						+"</td>"
+					+"</tr>").addClass("zuobiao");	
+		$(this).parent().parent().after(tr);
+		$(this).addClass("pan-del").removeClass("pan-add").removeClass("pan-add2");
+	});
+	//第二个添加
+	var y = 3;
+	$(".pan-add3").live("click",function(){
+		y++;
+		var tr = $("<tr class='zuobiao2'>"
+		 				+"<th><span class='pan-add pan-add3' name='x2'>*</span>"+(titX+y)
+						+"：</th>"
+						+"<td>"
+							+'<input type="text" class="two-ipt validate[custom[numberOnly],maxSize[12]]" name="x2" id="'+(swX+y)+'"/>'
+						+"</td>"
+						+"<th>"+(titY+y)
+						+"：</th>"
+						+"<td>"
+							+'<input type="text" class="two-ipt validate[custom[numberOnly],maxSize[12]]" name="y2" id="'+(swY+y)+'"/>'
+						+"</td>"
+					+"</tr>");	
+		$(this).parent().parent().after(tr);
+		$(this).addClass("pan-del2").removeClass("pan-add pan-add3");
+		return false;
+	});
+	$(".pan-del").live("click",function(){
+		//删除的时候刷新数字
+		$(this).parent().parent().remove();
+	});
+	$(".pan-del2").live("click",function(){
+		//删除的时候刷新数字
+		$(this).parent().parent().remove();
+	});
+	/*清除画板*/
+	$(".btn-preclear").live("click",function(){
+		if($('.canvas-show').find('canvas')[0]!=null){	//新建一个画板
+			$('.canvas-show canvas').remove();
+			canvas = $('<canvas class="canvas">'+'</canvas>');
+			$('.canvas-show').append(canvas);
+		}
+		var wid = $('.canvas-show').width();
+		var hei = $('.canvas-show').height();
+		$('.canvas').attr("width",wid);
+		$('.canvas').attr("height",hei);
+		//清除画板时使以前添加的数组元素清零
+		bai=[];
+		bai2=[];
+		smog=[];
+		water=[];
+		//清除画板时使以前的点击次数清零
+		clickNum=0;	
+		clickNum2=0;	
+		/*canvas点击画图*/
+		canvasWrite();
+	});
+	/*提交*/
+	var types;
+	var nums = 2;
+	$(".btn-preserve").live("click",function(){
+		setInfo(chanid);
+		var params = {
+			"method":"get_ana_node_info",
+			"sessionid":session,
+			"id":chanid	  //无效的id节点
+		}
+		//应该是同步
+		$.ajax({
+			type : 'POST',
+			url : "/upapi",
+			async: false,
+			data : JSON.stringify(params),
+			success : function(data){
+				if(data.retcode == 0){
+					if(data.enable == "undefined" && JSON.stringify(data.param.type) == "undefined" ){
+						//设置配置信息
+						return false;			
+					}
+					pars = data.param;
+					types = data.param.type;
+				}
+			}
+		});
+		//如果已经有canvas，那么删除这个canvas
+		/*if($('.canvas').length != 0){
+			$('.canvas').remove();	
+		}
+		if(types == 'water'){
+			nums = 1;	
+		}*/
+		//_canvas(nums,types,pars);
+	});
+	
+</script>
+<style type="text/css">
+	.two-table tr th{ width:110px !important;}
+	.two-table tr td .two-select{ width:95%;}
+	.two-table tr td .two-ipt{ width:95%;}
+</style>
+</head>
+<body>
+	<div class="analyse-top" style="bottom:15px; height:auto;">
+    	<div class="analyse-title">视频节点：<label id="video"></label><span class="analyse-device">设备运行正常</span></div>
+        <div class="analyse-video right50" style="z-index:1;">
+        	<div class='canvas-show'>
+               
+            </div>
+        	<object name='upview' class='view-object player player1' type='application/x-upview' width='100%' height='100%'></object>
+            <canvas name='upview' class='view-object player player2 hide' type='application/x-upview' width='100%' height='100%'></canvas>
+           <!-- <object width='100%' height='100%'>
+            	<param name="quality" value="high">
+            	<param name="movie" value="img/00.swf">
+                <param value="always" name="allowScriptAccess">
+                <param value="internal" name="allowNetworking">
+				<param name='wmode' value='transparent'>
+                <embed src="img/00.swf" quality="high" width="100%" height="100%" wmode="transparent"></embed>
+			</object>-->
+        </div>
+        <div class="video-System">
+        	<div class="video-title"><span class="icon"></span>视频分析设置</div>
+        	<form id="addAnalyse">
+                <table class="two-table alert-two-table"> 
+                    <tr class="hide">
+                        <th><span class="red">*</span>设备归属单位：</th>
+                        <td colspan="3">
+                            <input type="text" class="two-ipt validate[required,custom[numberOnly],maxSize[12]] txt_max"/>
+                        </td>
+                    </tr>
+                   <tr  class="hide">
+                        <th><span class="red">*</span>排口信息：</th>
+                        <td colspan="3">
+                            <input type="text" class="two-ipt validate[required,custom[numberOnly],maxSize[12]] txt_max"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th><span class="red">*</span>监测污染类型：</th>
+                        <td>
+                            <select class="two-select validate[required]" id="jiance" onchange="change(this);">
+                                <option selected="selected">请选择污染类型</option>
+                                <option value="water">污水检测</option>
+                                <option value="smog">烟窗检测</option>
+                                <option value="sw">固废检测</option>
+                            </select>
+                        </td>
+                        <th><span class="red">*</span>是否启用：</th>
+                        <td>
+                            <input type="radio" value="1" id="radio1" class="validate[required]" name="radio"/><label for="radio1">是</label>
+                            <input type="radio" value="0" id="radio2" class="validate[required]" checked="checked" name="radio"/><label for="radio2">否</label>
+                        </td>
+						
+                    </tr>
+                    <tbody class="water hide">
+						<tr>
+                            <td colspan="2">
+                                <span class="title">污水口位置</span>
+                            </td>
+							<td>
+								<span class="btn btn-preclear"	style="margin-left:25px;margin-top:5px"><span class="btn-img"></span><span class="btn-title">重新设置</span></span>
+							</td>
+                        </tr>
+                        <tr>
+                            <th><span class="red">*</span>污水口x坐标：</th>
+                            <td><input type="text" class="two-ipt validate[required,custom[numberOnly],maxSize[12]]" id="waterX" name="x"/></td>
+                            <th><span class="red">*</span>污水口y坐标：</th>
+                            <td><input type="text" class="two-ipt validate[required,custom[numberOnly],maxSize[12]]" id="waterY" name="y"/></td>
+                        </tr>
+                        <tr>
+                            <th><span class="red">*</span>污水口宽度(cm)：</th>
+                            <td><input type="text" class="two-ipt validate[required,custom[numberOnly],maxSize[12]]" id="waterWidth" name="w"/></td>
+                            <th><span class="red">*</span>污水口高度(cm)：</th>
+                            <td><input type="text" class="two-ipt validate[required,custom[numberOnly],maxSize[12]]" id="waterHeight" name="h"/></td>
+                        </tr>
+                    </tbody>
+                    <tbody class="smog hide">
+                        <tr>
+                            <td colspan="2">
+                                <span class="title">烟囱出烟位置</span>
+                            </td>
+							<td>
+								<span class="btn btn-preclear"	style="margin-left:25px;margin-top:5px"><span class="btn-img"></span><span class="btn-title">重新设置</span></span>
+							</td>
+                        </tr>
+                        <tr class="smog2">
+                            <th><span class="red">*</span>烟囱左上x坐标：</th>
+                            <td><input type="text" class="two-ipt validate[required,custom[numberOnly],maxSize[12]]" id="smogX" name="x"/></td>
+                            <th><span class="red">*</span>烟囱左上y坐标：</th>
+                            <td><input type="text" class="two-ipt validate[required,custom[numberOnly],maxSize[12]]" id="smogY" name="y"/></td>
+                        </tr>
+                        <tr class="smog2">
+                            <th><span class="red">*</span>烟囱宽(cm)：</th>
+                            <td><input type="text" class="two-ipt validate[required,custom[numberOnly],maxSize[12]]" id="smogW" name="w"/></td>
+                            <th><span class="red">*</span>烟囱宽高(cm)：</th>
+                            <td><input type="text" class="two-ipt validate[required,custom[numberOnly],maxSize[12]]" id="smogH" name="h"/></td>
+                        </tr>
+                    </tbody>
+                    <tbody class="sw hide">
+                        <tr>
+                            <td colspan="2">
+                                <span class="title">固废存放检测区域(多边形)</span>
+                            </td>
+							<th><span class="red">*</span>绿色为可摆放：</th>
+							<td>
+								<span style="float:left"><input type="radio" value="3" id="radio3" class="validate[required]" name="radios"	checked="checked"/><label for="radio3">绿色</label></span>
+								<span class="btn btn-preclear"	style="margin-left:25px;margin-top:5px"><span class="btn-img"></span><span class="btn-title">重新设置</span></span>
+							</td>
+                        </tr>
+                        <tr class="zuobiao">
+                            <th><span class="red">*</span>边界点x坐标1：</th>
+                            <td><input type="text" class="two-ipt validate[required,custom[numberOnly],maxSize[12]]" name="xx" id="swX1"/></td>
+                            <th><span class="red">*</span>边界点y坐标1：</th>
+                            <td><input type="text" class="two-ipt validate[required,custom[numberOnly],maxSize[12]]" name="yy" id="swY1"/></td>
+                        </tr>
+                        <tr class="zuobiao">
+                            <th><span class="red">*</span>边界点x坐标2：</th>
+                            <td><input type="text" class="two-ipt validate[required,custom[numberOnly],maxSize[12]]" name="xx" id="swX2"/></td>
+                            <th><span class="red">*</span>边界点y坐标2：</th>
+                            <td><input type="text" class="two-ipt validate[required,custom[numberOnly],maxSize[12]]" name="yy" id="swY2"/></td>
+                        </tr>
+                        <tr class="tr1 zuobiao">
+                            <th><span class="pan-add pan-add2">*</span>边界点x坐标3：</th>
+                            <td><input type="text" class="two-ipt validate[required,custom[numberOnly],maxSize[12]]" name="xx" id="swX3"/></td>
+                            <th><span class="red">*</span>边界点y坐标3：</th>
+                            <td><input type="text" class="two-ipt validate[required,custom[numberOnly],maxSize[12]]" name="yy" id="swY3"/></td>
+                        </tr>
+                        <tr>
+                            <td colspan="2">
+                                <span class="title">不可摆放固废检测区域(多边形)</span>
+                            </td>
+							<th><span class="red">*</span>红色为不可摆放：</th>
+							<td>
+								<span style="float:left"><input type="radio" value="4" id="radio4" class="validate[required]"  name="radios"/><label for="radio4">红色</label></span>
+							</td>
+                        </tr>
+                        <tr class="zuobiao2">
+                            <th><span class="red">*</span>边界点x坐标1：</th>
+                            <td><input type="text" class="two-ipt validate[required,custom[numberOnly],maxSize[12]]" name="x2" id="swGuX1"/></td>
+                            <th><span class="red">*</span>边界点y坐标1：</th>
+                            <td><input type="text" class="two-ipt validate[required,custom[numberOnly],maxSize[12]]" name="y2" id="swGuY1"/></td>
+                        </tr>
+                        <tr class="zuobiao2">
+                            <th><span class="red">*</span>边界点x坐标2：</th>
+                            <td><input type="text" class="two-ipt validate[required,custom[numberOnly],maxSize[12]]" name="x2" id="swGuX2"/></td>
+                            <th><span class="red">*</span>边界点y坐标2：</th>
+                            <td><input type="text" class="two-ipt validate[required,custom[numberOnly],maxSize[12]]" name="y2" id="swGuY2"/></td>
+                        </tr>
+                        <tr class="zuobiao2">
+                            <th><span class="pan-add pan-add3">*</span>边界点x坐标3：</th>
+                            <td><input type="text" class="two-ipt validate[required,custom[numberOnly],maxSize[12]]" name="x2" id="swGuX7"/></td>
+                            <th><span class="red">*</span>边界点y坐标3：</th>
+                            <td><input type="text" class="two-ipt validate[required,custom[numberOnly],maxSize[12]]" name="y2" id="swGuY7"/></td>
+                        </tr>
+                    </tbody> 
+                    <tfoot>
+                    	<tr>
+                            <th></th>
+                            <td colspan="3">
+                            	<span class="btn btn-preserve" style="margin-left:0;"><span class="btn-img"></span><span class="btn-title">保存</span></span>
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

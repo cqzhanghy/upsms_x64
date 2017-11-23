@@ -1,0 +1,998 @@
+<html>
+<head>
+<title>test page for upsms web api</title>
+</head>
+	<link rel="stylesheet" href="zTree_v3-master/css/demo.css" type="text/css">
+	<link rel="stylesheet" href="zTree_v3-master/css/zTreeStyle/zTreeStyle.css" type="text/css">	
+    <script language="javascript" type="text/javascript" src="jquery-1.11.2.js"></script>
+	<script type="text/javascript" src="jquery.md5.js"></script>
+	<script type="text/javascript" src="zTree_v3-master/js/jquery.ztree.core-3.5.js"></script>
+	<script type="text/javascript" src="zTree_v3-master/js/jquery.ztree.excheck-3.5.js"></script>
+	<script type="text/javascript" src="zTree_v3-master/js/jquery.ztree.exedit-3.5.js"></script>
+
+	<script type="text/javascript" src="dist/jquery.json.min.js"></script>
+    <script type="text/javascript">
+	var zTreeObj;
+	var select_dir;
+	var select_node;
+	function zTreeOnMouseDown(event, treeId, treeNode) 
+	{
+     //   alert(treeNode.tId + ", " + treeNode.name  + ", " + treeNode["title"]);
+    };
+	function zTreeOnClick(event, treeId, treeNode) 
+	{
+	    if(treeNode.isParent)
+		{
+		    select_dir = treeNode.id;
+			return;
+		}
+		else
+		{
+		    select_node = treeNode.id;
+		}
+		var div = $("#pre_view");
+		div.empty();
+		if(is_pc())
+		{
+		    pc_play(treeNode);
+		}
+		else
+		{
+		    mobile_play(treeNode);
+		}
+    };
+
+	function pc_play(treeNode)
+	{
+	    var div = $("#pre_view");
+		div.empty();
+		div.append("<object id='plugin0' type='application/x-upview' style='width:100%;height:100%'>");
+		var id = treeNode.id;
+		var addr = GetHostAddr();
+		var user = $("#login_user").val();
+	    var passw = $.md5($("#login_passw").val());
+		var plugin2 = document.getElementById("plugin0");
+		var plugin = $("#plugin0")[0];
+		plugin.RealPlay("upsms",addr,user,passw,id);
+	}
+	
+	function mobile_play(treeNode)
+	{
+	    var div = $("#pre_view");
+		div.empty();		
+		div.append("<video src='nodes/1/live/hls/m3u8.M3U8' controls='controls' autoplay='autoplay' style='width:100%;height:100%'>“测试视频格式”</video>");
+	}
+	function zTreeOnDblClick(event, treeId, treeNode)
+	{
+	    if(treeNode.isParent)
+		{
+		    return;
+		}
+		var div = $("#pre_view");
+		div.empty();
+		if(is_pc())
+		{
+		    pc_play(treeNode);
+		}
+		else
+		{
+		    mobile_play(treeNode);
+		}
+  //      alert(treeNode.id);
+    };
+	function DelDir(treeNode)
+	{
+	    var obj = {};
+	    obj['method'] = "del_dir";
+        obj['sessionid'] = login_id;
+		obj['id'] = treeNode.id;
+		var jsonstr = $.toJSON(obj);
+        $.post("/upapi",jsonstr,rec_data);	
+	}
+	function DelNode(treeNode)
+	{
+	    var obj = {};
+	    obj['method'] = "del_node";
+        obj['sessionid'] = login_id;
+		obj['id'] = treeNode.id;
+		var jsonstr = $.toJSON(obj);
+        $.post("/upapi",jsonstr,rec_data);	
+	}
+	function zTreeOnRemove(event, treeId, treeNode) 
+	{
+	    if(treeNode.isParent)
+		{
+		    DelDir(treeNode);
+		}
+         else
+        {
+		     DelNode(treeNode);
+		}		 
+    }
+	
+	function ChanDirTitle(treeNode)
+	{
+	    var obj = {};
+	    obj['method'] = "change_dir_title";
+        obj['sessionid'] = login_id;
+		obj['id'] = treeNode.id;
+		obj['title'] = treeNode.title;
+		var jsonstr = $.toJSON(obj);
+        $.post("/upapi",jsonstr,rec_data);
+	}
+    function zTreeOnRename(event, treeId, treeNode, isCancel) 
+	{
+	    if(isCancel)
+		{
+		    return;
+		}
+		if(treeNode.isParent)
+		{
+		    ChanDirTitle(treeNode);
+		}
+    }
+
+	function OnGetNode(data, status)
+	{
+	    if("success" != status)
+		{
+		    alert(start);
+		    return;
+		}
+		if("success" != data.ret)
+		{
+		    alert(data.ret);
+		    return;
+		}
+		var nodes = data["node"];
+		var pid   = data["pid"];
+		for(var i=0; i<nodes.length; i++)  
+        {  
+            nodes[i]["pId"] = nodes[i]["pid"];
+			nodes[i]["isParent"] = false;
+        }  
+		var tree = $.fn.zTree.getZTreeObj("tree");
+		var treeNodes = tree.getNodesByParam("id", pid, null);
+		if(0 == treeNodes.length)
+		{
+		    return;
+		}
+		var treeNode = treeNodes[0];
+		tree.addNodes(treeNode,nodes,false);
+	}
+	function zTreeBeforeExpand(treeId, treeNode) 
+	{
+	    if(treeNode.isGetNode)
+		{
+		    return;
+		}
+	    var obj = {};
+	    obj['method'] = "get_node";
+        obj['sessionid'] = login_id;
+		obj['id'] = treeNode.id;
+		var jsonstr = $.toJSON(obj);
+        $.post("/upapi",jsonstr,OnGetNode);
+		treeNode["isGetNode"] = true;
+        return true;
+    };
+
+
+	setting = {		
+		callback: 
+		{
+		    onMouseDown: zTreeOnMouseDown,
+			onDblClick: zTreeOnDblClick,
+			onClick: zTreeOnClick,
+			onRemove: zTreeOnRemove,
+			onRename: zTreeOnRename,
+			beforeExpand: zTreeBeforeExpand
+	    },
+		data:
+		{
+		    key:
+			{
+			    name:"title"
+			},
+			simpleData: 
+			{
+			    enable: true,
+			    idKey: "id",
+			    pIdKey: "pId",
+			    rootPId: ""
+		    }
+		},
+		edit:
+		{
+		    enable: true,
+		    showRemoveBtn: true,
+		    removeTitle: "删除节点"
+		}
+	};
+	zTreeNodes = [];
+    function GetHostAddr()
+	{
+	    //获取当前网址，如： http://localhost:8080/Tmall/index.jsp 
+        var curWwwPath=window.document.location.href; 
+        //获取主机地址之后的目录如：/Tmall/index.jsp 
+        //var pathName=window.document.location.pathname; 
+		var pathName=curWwwPath.substring(7);
+        var pos=pathName.indexOf("/"); 
+        //获取主机地址，如： http://localhost:8080 
+        var localhostPaht=pathName.substring(0,pos); 
+		return localhostPaht;
+	}
+    function is_pc()
+	{
+         var os = new Array("Android","iPhone","Windows Phone","iPod","BlackBerry","MeeGo","SymbianOS");  // 其他类型的移动操作系统类型，自行添加
+        var info = navigator.userAgent;
+        var len = os.length;
+        for (var i = 0; i < len; i++)
+        {
+            if (info.indexOf(os[i]) > 0)
+	        {
+                return false;
+            }
+        }
+        return true;
+    }
+
+	var login_id;
+	function rec_login(data, status)
+	{
+  	    var ret = data["ret"];
+	    if("success" != ret)
+		{
+		   alert("login failed status = " + ret);
+		}
+		login_id = data["sessionid"];
+		var jsonstr = $.toJSON(data);
+		var method = data["method"];
+	    GetDir();
+	}
+	function rec_data(data, status)
+	{
+	   var jsonstr = $.toJSON(data);
+	   var method = data["method"];
+	   var ret    = data["ret"];
+       alert(jsonstr);
+	}
+	
+	function Login()
+	{
+	    var jsonObj = {};
+	    jsonObj['method'] = "login";
+        jsonObj['user'] = $("#login_user").val();
+	    jsonObj['passw'] = $.md5($("#login_passw").val());
+	    var jsonstr = $.toJSON(jsonObj);
+        $.post("/upapi",jsonstr,rec_login);		
+	}
+	function Logout()
+	{
+	    var jsonObj = {};
+	    jsonObj['method'] = "logout";
+        jsonObj['sessionid'] = login_id;
+	    var jsonstr = $.toJSON(jsonObj);
+        $.post("/upapi",jsonstr,rec_data);		
+	}
+	function Adduser()
+	{
+	    var obj = {};
+	    obj['method'] = "add_user";
+        obj['sessionid'] = login_id;
+		obj['user'] = $("#login_user").val();
+		obj['passw'] = $.md5($("#login_passw").val());
+	    var jsonstr = $.toJSON(obj);
+        $.post("/upapi",jsonstr,rec_data);	
+	}
+	function GetAllOfflineNode()
+	{
+	     var obj = {};
+	    obj['method'] = "get_offline_node";
+        obj['sessionid'] = login_id;
+	    var jsonstr = $.toJSON(obj);
+        $.post("/upapi",jsonstr,rec_data);
+	}
+	function GetNodeState()
+	{
+	    var obj = {};
+	    obj['method'] = "get_node_state";
+        obj['sessionid'] = login_id;
+		obj['id'] = select_node;
+	    var jsonstr = $.toJSON(obj);
+        $.post("/upapi",jsonstr,rec_data);
+	}
+	function Deluser()
+	{
+	    var obj = {};
+	    obj['method'] = "del_user";
+        obj['sessionid'] = login_id;
+		obj['user'] = $("#login_user").val();
+	    var jsonstr = $.toJSON(obj);
+        $.post("/upapi",jsonstr,rec_data);	
+	}
+	function ChangePassw()
+	{
+	    var obj = {};
+	    obj['method'] = "change_passw";
+        obj['sessionid'] = login_id;
+		obj['old_passw'] = $.md5($("#login_passw").val());
+		obj['new_passw'] = $.md5($("#new_passw").val());
+	    var jsonstr = $.toJSON(obj);
+        $.post("/upapi",jsonstr,rec_data);	
+	}
+	function OnGetDir(data, status)
+	{
+	    if("success" != status)
+		{
+		    alert(start);
+		    return;
+		}
+		if("success" != data.ret)
+		{
+		    alert(data.ret);
+		    return;
+		}
+		var tree = $("#tree");
+		if(tree)
+		{
+		    tree.empty();
+		}
+		var nodes = data["dir"];
+		for(var i=0; i<nodes.length; i++)  
+        {  
+            nodes[i]["pId"] = nodes[i]["pid"];
+			nodes[i]["isParent"] = true;
+        }  
+		$.fn.zTree.init(tree, setting, nodes);
+		
+	}
+	function GetDir()
+	{
+	    var obj = {};
+	    obj['method'] = "get_dir";
+        obj['sessionid'] = login_id;
+	    var jsonstr = $.toJSON(obj);
+        $.post("/upapi",jsonstr,OnGetDir);	
+	}
+	
+	function AddDir()
+	{
+	    var obj = {};
+		obj['method'] = "add_dir";
+		obj['sessionid'] = login_id;
+		obj['pid'] = select_dir;
+		obj['title'] = $("#dir_title").val();
+		var jsonstr = $.toJSON(obj);
+		$.post("/upapi",jsonstr,rec_data);
+		GetDir();
+	}
+	function OnAddNode(data, status)
+	{
+	    	if("success" != data.ret)
+		{
+		    alert(data.ret);
+		    return;
+		}
+		
+		//将增加的通道节点，挂载到当前选择的目录节点下
+		var id = data.id;
+		var obj = {};
+		obj['method'] = "chnodepid";
+		obj['sessionid'] = login_id;
+		obj['pid'] = select_dir;
+		obj['id'] = id;
+		var jsonstr = $.toJSON(obj);
+		$.post("/upapi",jsonstr,rec_data);
+	}
+	function AddNode()
+	{
+	    var obj = {};
+		obj['method'] = "add_node";
+		obj['sessionid'] = login_id;
+		obj['type'] = $("#node_type").val();
+		obj['addr'] = $("#node_addr").val();
+		obj['user'] = $("#node_user").val();
+		obj['passw'] = $("#node_passw").val();
+		obj['chanid'] = $("#node_chanid").val();
+		obj['title'] = $("#node_title").val();
+		var jsonstr = $.toJSON(obj);
+		$.post("/upapi",jsonstr,OnAddNode);
+		GetDir();
+	}
+	
+		function OnPrintJson(data, status)
+	{
+	    	if("success" != data.ret)
+		{
+		    alert(data.ret);
+		    return;
+		}
+		var jsonstr = $.toJSON(data);
+		alert(jsonstr);
+	}
+	function QueryDevChan()
+	{
+	    var obj = {};
+		obj['method'] = "querydevchan";
+		obj['sessionid'] = login_id;
+		obj['type'] = $("#node_type").val();
+		obj['addr'] = $("#node_addr").val();
+		obj['user'] = $("#node_user").val();
+		obj['passw'] = $("#node_passw").val();
+		var jsonstr = $.toJSON(obj);
+		$.post("/upapi",jsonstr,OnPrintJson);
+	}
+	function GetAllNode()
+	{
+	    var obj = {};
+		obj['method'] = "get_all_node";
+		obj['sessionid'] = login_id;
+		var jsonstr = $.toJSON(obj);
+		$.post("/upapi",jsonstr,OnPrintJson);
+	}
+	
+	function OnGetLic(data, status)
+	{
+	    	if("success" != data.ret)
+		{
+		    alert(data.ret);
+		    return;
+		}
+		$("#lic_text").attr("value",data.lic);//填充内容 
+		var jsonstr = $.toJSON(data);
+		alert(jsonstr);
+	}
+	function GetLic()
+	{
+	    var obj = {};
+		obj['method'] = "create_lic";
+		obj['sessionid'] = login_id;
+		obj['user'] = $("#login_user").val();
+	    obj['passw'] = $.md5($("#login_passw").val());
+		obj['key'] = $("#key_text").val();
+		var jsonstr = $.toJSON(obj);
+		$("#lic_text").attr("value","");//填充内容 
+		$.post("/upapi",jsonstr,OnGetLic);
+	}
+	function ready()
+	{
+	    $("#login").click(Login);
+	    $("#logout").click(Logout);
+		$("#add_user").click(Adduser);
+		$("#del_user").click(Deluser);
+		$("#change_passw").click(ChangePassw);
+		$("#get_dir").click(GetDir);
+		$("#add_dir").click(AddDir);
+		$("#add_node").click(AddNode);
+		$("#querydevchan").click(QueryDevChan);
+		$("#get_all_node").click(GetAllNode);
+		$("#get_lic").click(GetLic);
+		$("#get_node_state").click(GetNodeState);
+		$("#get_all_offline_node").click(GetAllOfflineNode);
+		zTreeObj = $.fn.zTree.init($("#tree"), setting, zTreeNodes);  
+	}
+    $(document).ready(function(){
+    ready();
+	window.onload=function()
+	{
+		 addEvent(plugin0(), 'dblclickex',function (){
+			 var str = "plugin1 click"; str += " version:"; str += plugin0().version; 
+			 plugin0().StopRealPlay();
+			 alert(str);
+			 }
+			 );
+
+		 addEvent(plugin1(), 'clickex',function (){plugin1().StopRealPlay();alert("plugin1 click");});
+//		 addEvent(document.getElementById('plugin2'),'click',function(){alert("plugin2 click");});
+		 addEvent(document.getElementById('plugin2'),'dblclickex',function(){alert("plugin2 dblclick");});
+	}
+	Date.prototype.Format = function (fmt) { //author: meizz 
+    var o = {
+        "M+": this.getMonth() + 1, //月份 
+        "d+": this.getDate(), //日 
+        "h+": this.getHours(), //小时 
+        "m+": this.getMinutes(), //分 
+        "s+": this.getSeconds(), //秒 
+        "q+": Math.floor((this.getMonth() + 3) / 3), //季度 
+        "S": this.getMilliseconds() //毫秒 
+    };
+    if (/(y+)/.test(fmt)) fmt = fmt.replace(RegExp.$1, (this.getFullYear() + "").substr(4 - RegExp.$1.length));
+    for (var k in o)
+    if (new RegExp("(" + k + ")").test(fmt)) fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
+    return fmt;
+}
+	function click(obj,name)
+	{
+		obj.StopRealPlay();
+		alert(name);
+	}
+        function mousedown()
+        {
+             alert("mousedown");
+         }
+        function plugin0()
+        {
+            return document.getElementById('plugin0');
+        }
+         function plugin1()
+        {
+            return document.getElementById('plugin1');
+        }
+        plugin = plugin0;
+        function addEvent(obj, name, func)
+        {
+            if (obj.attachEvent) {
+                ret = obj.attachEvent("on"+name, func);
+            } else {
+               ret = obj.addEventListener(name, func, false); 
+            }
+        }
+        
+        function load()
+        {
+            addEvent(plugin(), 'test', function(){
+                alert("Received a test event from the plugin.")
+            });
+        }
+        function pluginLoaded() {
+            alert("Plugin loaded!");
+        }
+        
+        function addTestEvent()
+        {
+            addEvent(plugin(), 'echo', function(txt,count){
+                alert(txt+count);
+            });
+        }
+        
+        function testEvent()
+        {
+            plugin().testEvent();
+        }
+        
+        function pluginValid()
+        {
+            if(plugin().valid){
+                alert(plugin().echo("This plugin seems to be working!"));
+            } else {
+                alert("Plugin is not working :(");
+            }
+        }
+		function setplaybacktime(pluginid, time)
+		{
+             try
+               {
+                 var plugin = document.getElementById(pluginid);
+				 var str = plugin.GetOsdTime();
+                  str = str.replace(/-/g,"/");
+                  var date = new Date(str );
+				  date.setMinutes(date.getMinutes()+time);
+                  var ret = plugin.SetPlayTime(date.Format("yyyy-MM-dd hh:mm:ss"));
+				  if (0 != ret)
+				  {
+                     alert(ret);
+				  }				 
+               }
+               catch (e) 
+               {
+                 alert(e.message);
+               }
+		}
+
+		function getplaybacktime(pluginid)
+		{
+             try
+               {
+                 var plugin = document.getElementById(pluginid);
+				 alert(plugin.GetOsdTime());
+               }
+               catch (e) 
+               {
+                 alert(e.message);
+               }
+		}
+		function setplaybackspeed(pluginid,speed)
+		{
+            try
+               {
+                 var plugin = document.getElementById(pluginid)
+                 if(plugin.valid)
+                 {
+                     var ret = plugin.SetSpeed(speed);
+                     alert(ret);
+                 } 
+                 else 
+                 {
+                     alert("Plugin is not working :(");
+                 }
+               }
+               catch (e) 
+               {
+                 alert(e.message);
+               }
+		}
+		function stopplayback(pluginid)
+		{
+               
+		      try
+               {
+                 var plugin = document.getElementById(pluginid)
+                 if(plugin.valid)
+                 {
+                     var ret = plugin.StopPlay();
+                     alert(ret);
+                 } 
+                 else 
+                 {
+                     alert("Plugin is not working :(");
+                 }
+               }
+               catch (e) 
+               {
+                 alert(e.message);
+               }
+
+		}
+		function pluginplayback(pluginid)
+		{
+               
+		    try
+             {
+				 var t = new Date();
+			   		 t.setHours(0);
+					 t.setMinutes(0);
+					 t.setSeconds(0); 
+                   var plugin = document.getElementById(pluginid)
+                 if(plugin.valid)
+                 {
+                     var ret = plugin.StartPlay(t.Format("yyyy-MM-dd hh:mm:ss"));
+                     alert(ret);
+                  } 
+                  else 
+                  {
+                      alert("Plugin is not working :(");
+                  }
+               }
+               catch (e) 
+               {
+                 alert(e.message);
+               }
+
+		}
+
+		function _pluginquery(plugin,type,addr,user,passw,chanid)
+		{
+			try{
+            if(plugin.valid)
+                 {
+                      plugin.SetRcdOpt(type,addr,user,passw,chanid);
+					 var t = new Date();
+					 var e_str = t.Format("yyyy-MM-dd hh:mm:ss");
+					 t.setHours(0);
+					 t.setMinutes(0);
+					 t.setSeconds(0); 
+                     var s_str = t.Format("yyyy-MM-dd hh:mm:ss"); 
+					 
+
+			        var date2 = new Date();
+			        date2.setDate(date2.getDate()+1);
+					var rcds =  plugin.Query(s_str,e_str);
+				    alert(rcds);
+                  } 
+                  else 
+                  {
+                      alert("Plugin is not working :(");
+                  }
+               }
+               catch (e) 
+               {
+                 alert(e.message);
+               }
+		}
+		function pluginquery(pluginid,type,addr,user,passw,chanid)
+		{
+                   var type=document.getElementById(type).value;
+                    var addr=document.getElementById(addr).value;
+                    var user=document.getElementById(user).value;
+                    var passw=document.getElementById(passw).value;
+                    var chanid=document.getElementById(chanid).value;
+                    var plugin = document.getElementById(pluginid)
+             _pluginquery(plugin,type,addr,user,passw,chanid)    
+		}
+
+		function smspluginquery(pluginid,type,addr,user,passw,chanid)
+		{
+
+					var type=document.getElementById(type).value;
+                    var addr=document.getElementById(addr).value;
+                    var user=document.getElementById(user).value;
+                    var passw=document.getElementById(passw).value;
+                    var chanid=document.getElementById(chanid).value;
+                    var plugin = document.getElementById(pluginid);
+					var jsonObj = {};
+			        jsonObj['id'] = chanid;
+			        jsonObj['addr'] = addr;
+			        jsonObj['passw'] = passw;
+			        jsonObj['type'] = type;
+			        jsonObj['user'] = user;
+			        var jsonstr = $.toJSON(jsonObj);
+			        chanid = jsonstr;
+					var sms_addr = document.getElementById('sms_addr').value;
+					var sms_user = document.getElementById('sms_user').value;
+					var sms_passw = document.getElementById('sms_passw').value;
+
+				  _pluginquery(plugin,'upa',sms_addr,sms_user,sms_passw,chanid);
+		}
+		function _objplay(plugin,type,addr,user,passw,chanid,ismain)
+		{
+			 try
+             {
+                 if(plugin.valid)
+                 {
+					 if(ismain)
+					 {
+						ret = plugin.RealPlay(type,addr,user,passw,chanid);
+					 }
+					 else
+					 {
+                        ret = plugin.RealPlaySub(type,addr,user,passw,chanid);
+					 }
+					 if(0 != ret)
+					 {
+						 var str = "Real Play Failed ret = ";
+						 str += ret;
+                        alert(str);
+					 }
+                  } 
+                  else 
+                  {
+                      alert("Plugin is not working :(");
+                  }
+               }
+               catch (e) 
+               {
+                 alert(e.message);
+               }
+		}
+		 function _pluginPlay(pluginid,type, addr, user, passw, chanid, ismain)
+		 {
+              try
+             {
+                   var type=document.getElementById(type).value;
+                    var addr=document.getElementById(addr).value;
+                    var user=document.getElementById(user).value;
+                    var passw=document.getElementById(passw).value;
+                    var chanid=document.getElementById(chanid).value;
+                    var plugin = document.getElementById(pluginid)
+				   _objplay(plugin,type,addr,user,passw,chanid,ismain);
+               }
+               catch (e) 
+               {
+                 alert(e.message);
+               }
+		 }
+	     function _SmsPlay(pluginid,type, addr, user, passw, chanid, ismain)
+		 {
+              try
+             {
+                   var type=document.getElementById(type).value;
+                    var addr=document.getElementById(addr).value;
+                    var user=document.getElementById(user).value;
+                    var passw=document.getElementById(passw).value;
+                    var chanid=document.getElementById(chanid).value;
+                    var plugin = document.getElementById(pluginid);
+					var jsonObj = {};
+			        jsonObj['id'] = chanid;
+			        jsonObj['addr'] = addr;
+			        jsonObj['passw'] = passw;
+			        jsonObj['type'] = type;
+			        jsonObj['user'] = user;
+			        var jsonstr = $.toJSON(jsonObj);
+			        chanid = jsonstr;
+					var sms_addr = document.getElementById('sms_addr').value;
+					var sms_user = document.getElementById('sms_user').value;
+					var sms_passw = document.getElementById('sms_passw').value;
+				   _objplay(plugin,'upa',sms_addr,sms_user,sms_passw,chanid,ismain);
+               }
+               catch (e) 
+               {
+                 alert(e.message);
+               }
+		 }
+         function pluginPlay(pluginid,type, addr, user, passw, chanid)
+         {
+              _pluginPlay(pluginid,type, addr, user, passw, chanid,true);
+          }
+		   function pluginPlaySub(pluginid,type, addr, user, passw, chanid)
+         {
+              _pluginPlay(pluginid,type, addr, user, passw, chanid,false);
+          }
+          function SmsPlay(pluginid,type, addr, user, passw, chanid)
+         {
+			 _SmsPlay(pluginid,type, addr, user, passw, chanid,true);
+         }
+		  function SmsPlaySub(pluginid,type, addr, user, passw, chanid)
+         {
+			 _SmsPlay(pluginid,type, addr, user, passw, chanid,false);
+         }
+          function pluginStopPlay(pluginid)
+         {
+             try
+             {
+                    var plugin = document.getElementById(pluginid)
+                 if(plugin.valid)
+                 {
+                      plugin.StopRealPlay();
+                  } 
+                  else 
+                  {
+                      alert("Plugin is not working :(");
+                  }
+               }
+               catch (e) 
+               {
+                 alert(e.message);
+               }
+          }
+        function ptzright(id,speed) 
+       {
+           try 
+           {
+               var plugin = document.getElementById(id);
+               plugin.PtzRight(speed);
+           } 
+           catch (e) 
+           {
+               alert(e.message);
+           }
+       }
+       function ptzleft(id,speed) 
+       {
+           try 
+           {
+               var plugin = document.getElementById(id);
+               plugin.PtzLeft(speed);
+           } 
+           catch (e) 
+           {
+               alert(e.message);
+           }
+       }
+        function ptzdown(id,speed) 
+       {
+           try 
+           {
+               var plugin = document.getElementById(id);
+               plugin.PtzDown(speed);
+           } 
+           catch (e) 
+           {
+               alert(e.message);
+           }
+       }
+        function ptzup(id,speed) 
+       {
+           try 
+           {
+               var plugin = document.getElementById(id);
+               plugin.PtzUp(speed);
+           } 
+           catch (e) 
+           {
+               alert(e.message);
+           }
+       }
+
+  });
+    </script>
+<body>
+   <a href="/UpViewWeb.exe">pc端控件下载</a>
+   <br />
+  流媒体地址:<input type="text" name="addr" value="192.168.0.73:80" id="sms_addr"/>
+  流媒体用户名:<input type="text" name="user" value="admin" id="sms_user"/>
+  流媒体密码:<input type="text" name="passw" value="admin" id="sms_passw"/>
+  <br />
+  用户名:<input type="text" name="passw" value="admin" id="login_user" />
+  密  码:<input type="text" name="passw" value="admin" id="login_passw" />
+  <INPUT TYPE="button" value="登录" id="login"/>
+  <INPUT TYPE="button" value="登出" id="logout"/>
+  <INPUT TYPE="button" value="增加用户" id="add_user"/>
+   <INPUT TYPE="button" value="删除用户" id="del_user"/>
+   <br />
+    新密码:<input type="text" name="passw" value="admin" id="new_passw" />
+  <INPUT TYPE="button" value="修改密码" id="change_passw"/>
+  <INPUT TYPE="button" value="获取目录" id="get_dir"/>
+  <br />
+  新增目录名称：<input type="text" value="目录" id="dir_title" />
+  <INPUT TYPE="button" value="添加目录" id="add_dir"/>
+  <br />
+  类型：<input type="text" value="hik" id="node_type" />
+  地址：<input type="text" value="192.168.0.248" id="node_addr" />
+  用户名：<input type="text" value="admin" id="node_user" />
+  密码：<input type="text" value="12345" id="node_passw" />
+  通道号：<input type="text" value="1" id="node_chanid" />
+  标题：<input type="text" value="8楼会议室" id="node_title" />
+  <INPUT TYPE="button" value="添加节点" id="add_node"/>
+  <INPUT TYPE="button" value="查询设备通道" id="querydevchan"/>
+  <INPUT TYPE="button" value="查询所有节点" id="get_all_node"/>
+  <INPUT TYPE="button" value="查询节点在线状态" id="get_node_state"/>
+  <INPUT TYPE="button" value="查询所有离线节点" id="get_all_offline_node"/>
+  <br/>
+  key:<input type="text" value="" id="key_text" />
+  <br/>
+  lic:<input type="text" value="" id="lic_text" />
+  <INPUT TYPE="button" value="授权文件" id="get_lic"/>
+  <br />
+  <br />
+  <div class="zTreeDemoBackground left" style="display:inline-block;*display:inline;vertical-align:top;">
+		<ul id="tree" class="ztree" style="margin-top:0px;"></ul>
+   </div>
+  <div  id="pre_view" style="width:707px;height:576px;display:inline-block;*display:inline; background-color:black; " >
+  </object>
+  </div>
+  <br />
+  <br />
+    <input type="text" name="type" value="hik" id="dev_type0">type</input>
+    <input type="text" name="addr" value="192.168.0.250" id="dev_addr0"/>
+    <input type="text" name="user" value="admin" id="dev_user0"/>
+    <input type="text" name="passw" value="12345" id="dev_passw0"/>
+    <input type="text" name="chanid" value="34" id="dev_chanid0"/>
+    <INPUT TYPE="button" value="设备直播" onClick="javascript:pluginPlay('plugin0','dev_type0','dev_addr0','dev_user0','dev_passw0','dev_chanid0')">
+	<INPUT TYPE="button" value="设备直播子码流" onClick="javascript:pluginPlaySub('plugin0','dev_type0','dev_addr0','dev_user0','dev_passw0','dev_chanid0')">
+	<INPUT TYPE="button" value="流媒体代理直播" onClick="javascript:SmsPlay('plugin0','dev_type0','dev_addr0','dev_user0','dev_passw0','dev_chanid0')">
+	<INPUT TYPE="button" value="流媒体代理直播子码流" onClick="javascript:SmsPlaySub('plugin0','dev_type0','dev_addr0','dev_user0','dev_passw0','dev_chanid0')">
+    <INPUT TYPE="button" value="停止" onClick="javascript:pluginStopPlay('plugin0')">
+	<INPUT TYPE="button" value="事件" onClick="javascript:test_event()">
+    <br />
+    <INPUT TYPE="button" value="上" onmousedown="javascript:ptzup('plugin0',5)" onmouseup="javascript:ptzup('plugin0',0)">
+    <INPUT TYPE="button" value="下" onmousedown="javascript:ptzdown('plugin0',5)" onmouseup="javascript:ptzdown('plugin0',0)">
+    <INPUT TYPE="button" value="左" onmousedown="javascript:ptzleft('plugin0',5)" onmouseup="javascript:ptzleft('plugin0',0)">
+    <INPUT TYPE="button" value="右" onmousedown="javascript:ptzright('plugin0',5)" onmouseup="javascript:ptzright('plugin0',0)">
+    <br />
+<object id="plugin1" type="application/x-upview" width="704" height="576" >
+</object><br />
+ <br />
+    <input type="text" name="type" value="dahua" id="dev_type1">type</input>
+    <input type="text" name="addr" value="192.168.0.72" id="dev_addr1"/>
+    <input type="text" name="user" value="admin" id="dev_user1"/>
+    <input type="text" name="passw" value="admin" id="dev_passw1"/>
+    <input type="text" name="chanid" value="1" id="dev_chanid1"/>
+    <INPUT TYPE="button" value="设备直播" onClick="javascript:pluginPlay('plugin1','dev_type1','dev_addr1','dev_user1','dev_passw1','dev_chanid1')">
+	<INPUT TYPE="button" value="设备直播子码流" onClick="javascript:pluginPlaySub('plugin1','dev_type1','dev_addr1','dev_user1','dev_passw1','dev_chanid1')">
+	<INPUT TYPE="button" value="流媒体代理直播" onClick="javascript:SmsPlay('plugin1','dev_type1','dev_addr1','dev_user1','dev_passw1','dev_chanid1')">
+	<INPUT TYPE="button" value="流媒体代理直播子码流" onClick="javascript:SmsPlaySub('plugin1','dev_type1','dev_addr1','dev_user1','dev_passw1','dev_chanid1')">
+    <INPUT TYPE="button" value="停止" onClick="javascript:pluginStopPlay('plugin1')">
+    <br />
+    <INPUT TYPE="button" value="上" onmousedown="ptzup('plugin1',5)" onmouseup="ptzup('plugin1',0)">
+    <INPUT TYPE="button" value="下" onmousedown="ptzdown('plugin1',5)" onmouseup="ptzdown('plugin1',0)">
+    <INPUT TYPE="button" value="左" onmousedown="ptzleft('plugin1',5)" onmouseup="ptzleft('plugin1',0)">
+    <INPUT TYPE="button" value="右" onmousedown="ptzright('plugin1',5)" onmouseup="ptzright('plugin1',0)">
+    <br />
+	<object id="plugin2" type="application/x-upview-rcd" width="704" height="576">
+</object><br />
+<br />
+    <input type="text" name="type" value="hik" id="dev_type2">type</input>
+    <input type="text" name="addr" value="192.168.0.250" id="dev_addr2"/>
+    <input type="text" name="user" value="admin" id="dev_user2"/>
+    <input type="text" name="passw" value="12345" id="dev_passw2"/>
+    <input type="text" name="chanid" value="34" id="dev_chanid2"/>
+    <INPUT TYPE="button" value="查询" onClick="javascript:pluginquery('plugin2','dev_type2','dev_addr2','dev_user2','dev_passw2','dev_chanid2')">
+	<INPUT TYPE="button" value="流媒体代理查询" onClick="javascript:smspluginquery('plugin2','dev_type2','dev_addr2','dev_user2','dev_passw2','dev_chanid2')">
+    <INPUT TYPE="button" value="回放" onClick="javascript:pluginplayback('plugin2')">
+	<INPUT TYPE="button" value="停止回放" onClick="javascript:stopplayback('plugin2')">
+    <br />
+    <INPUT TYPE="button" value="暂停" onClick="javascript:setplaybackspeed('plugin2',0)" >
+    <INPUT TYPE="button" value="1/8" onClick="javascript:setplaybackspeed('plugin2',1/8)" >
+    <INPUT TYPE="button" value="1/4" onClick="javascript:setplaybackspeed('plugin2',1/4)" >
+    <INPUT TYPE="button" value="1/2" onClick="javascript:setplaybackspeed('plugin2',1/2)" >
+	<INPUT TYPE="button" value="正常播放" onClick="javascript:setplaybackspeed('plugin2',1)" >
+	<INPUT TYPE="button" value="2" onClick="javascript:setplaybackspeed('plugin2',2)" >
+	<INPUT TYPE="button" value="4" onClick="javascript:setplaybackspeed('plugin2',4)" >
+	<INPUT TYPE="button" value="8" onClick="javascript:setplaybackspeed('plugin2',8)">
+	<INPUT TYPE="button" value="获取播放时间" onClick="javascript:getplaybacktime('plugin2')">
+	<INPUT TYPE="button" value="前进10分钟" onClick="javascript:setplaybacktime('plugin2',10)">
+	<INPUT TYPE="button" value="后退10分钟" onClick="javascript:setplaybacktime('plugin2',-10)">
+    <br />
+    <div id="divMsg"><div>
+</body>
+</html>

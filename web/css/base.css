@@ -1,0 +1,31 @@
+* {margin:0;padding:0;font-size:12px;font-family:Arial, Helvetica, sans-serif; -webkit-text-size-adjust: none;}
+html {width:100%;height:100%;}
+body {
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    background:#aaaaaa;
+}
+
+a,a:hover{ text-decoration:none; color:#333}
+
+/*页面层容器*/
+#container {width:90%; height:100%;margin:0 auto}
+
+/*页面头部*/
+#header {width:100%; height:5%;}
+
+/*页面主体*/
+#pagebody {width:100%; height:90%;}
+
+/*左侧*/
+#sideleft {width:20%; height:100%; margin:0; float: left; background:#DBF1FD}
+
+/*右侧*/
+#sideright {width:80%; height:100%; margin:0; float: right; background:#EFEBEF}
+
+/*页面底部*/
+#footer {width:100%;height:5%; text-align: center;}
+
+.Clear{clear:both;}
+

@@ -1,0 +1,124 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>视频监控系统</title>
+<link href="css/core.css" rel="stylesheet" type="text/css"/>
+<script src="js/jquery-1.7.2.min.js" type="text/javascript"></script>
+<script type="text/javascript" src="dist/jquery.cookie.js"></script>
+<script src="js/uc-ui.js" type="text/javascript"></script>
+<script src="js/player.js" type="text/javascript"></script>
+<script type="text/javascript">
+var session = $.cookie("sessionid")
+var passw = $.cookie("videopassw");
+var type = "upsms";
+var user = window.top.$("#index-man").text();
+var url = window.location.href;
+try{
+	url = url.substring(url.indexOf("://") + 3);
+	url = url.substring(0, url.indexOf("/"));
+} catch(e){};
+$("#video-show li").live("click",function(){
+	$(this).addClass("selected").siblings().removeClass("selected");	
+	num = $(this).index();
+});
+var addr = url;
+var type = "upsms";
+var num;
+//点击左边,得到id
+window.top.registerFn(function(treeNode){
+	window.top.validateSession();
+	//chanid = treeNode.chanid;
+	chanid = treeNode.id;
+	var li = $("<object name='upview' class='view-object player' preload='auto' type='application/x-upview' width='100%' height='100%'>"
+					+"<param name='wmode' value='transparent'>"
+				+"</object>");
+	$("#video-show li").eq(num).append(li);
+	$(".player").each(function(){
+		startPlay($(this)[0],chanid);
+	});
+	//点击选中 添加样式
+	$("#video-show li object").each(function(i){
+		var pluin = $(this)[0];
+		if (pluin.attachEvent) { //ie 浏览器
+			pluin.attachEvent("onclickex", function(){
+				playerCallBack(i);
+			});
+		} else {
+			pluin.addEventListener("clickex", function(){
+				playerCallBack(i);
+			}, false);
+		}
+	});
+	function playerCallBack(index) {
+		$("#video-show li").eq(index).addClass("selected").siblings().removeClass("selected");
+	}
+	//右边得到地址
+	$("#addr").val(addr);
+	$("#duan").val(treeNode.title);	
+},window.top.types.TREE_NODE_CLICK);
+
+</script>
+
+</head>
+<body>
+	<div class="list-max">
+		<div class="video-show video-show4">
+        	<ul id="video-show">
+				<li count="1">
+                	<span class="close">关闭</span>
+                    <div class="index-iframe">
+                    	<iframe class="index-iframe" src=""></iframe>
+                    </div>
+                </li>
+                <li count="2">
+                	<span class="close">关闭</span>
+                </li>
+                <li count="3"></li>
+                <li count="4"></li>
+            </ul>
+        </div>
+        <div class="video-oprate">
+       	  	<div class="title"><span class="icon"></span>云台监控</div>
+            <div class="cont">
+            	<ul class="ul-oprate">
+                	<li class="no"><img src="img/li-img1.png" /></li>
+                    <li title="云台控制上" id="top"><img src="img/li-img22.png" /></li>
+                    <li class="no"><img src="img/li-img3.png" /></li>
+                    <li title="云台控制左" id="left"><img src="img/li-img4.png" /></li>
+                    <li><img src="img/li-img5.png" /></li>
+                    <li title="云台控制右" id="right"><img src="img/li-img6.png" /></li>
+                    <li class="no"><img src="img/li-img7.png" /></li>
+                    <li title="云台控制下" id="bottom"><img src="img/li-img8.png" /></li>
+                    <li class="no"><img src="img/li-img9.png" /></li>
+                </ul>
+                <ul class="video-hand">
+                    <li class="more-ul">
+                    	<span class="video-more"></span>多画面
+                    	<ul>
+                        	<li class="video-one video_test" count='1'>一画面</li>
+                        	<li class="video-four video_test" count='4'>四画面</li>
+                            <li class="video-nine video_test" count='9'>九画面</li>
+                        </ul>
+                    </li>
+                    <li><span class="video-play"></span>开始录像</li>
+                    <li><span class="video-camera"></span>抓拍</li>
+                </ul>
+            </div>
+            <div class="title"><span class="icon"></span>平台信息</div>
+            <div class="cont cont2">
+            	<table class="video-table">
+                	<tr>
+                    	<th>ip地址：</th>
+                        <td><input type="text" id="addr"/></td>
+                    </tr>
+                	<tr>
+                    	<th>端口：</th>
+                        <td><input type="text" id="duan"/></td>
+                    </tr>
+                </table>
+            </div>
+      </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,79 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>视频融合服务系统</title>
+<link href="css/core.css" rel="stylesheet" type="text/css"/>
+<script src="js/jquery-1.7.2.min.js" type="text/javascript"></script>
+<script type="text/javascript" src="dist/jquery.cookie.js"></script>
+<script type="text/javascript" src="js/jquery.md5.js"></script>
+<script src="js/uc-ui.js" type="text/javascript"></script>
+<!-- 验证框架 -->
+<script type="text/javascript" src="validationengine/js/languages/jquery.validationEngine-zh_CN.js"></script>
+<script type="text/javascript" src="validationengine/js/jquery.validationEngine.js"></script>
+<link rel="stylesheet" type="text/css" href="validationengine/css/validationEngine.jquery.css" media="screen" />
+<!-- 验证框架end -->
+<script type="text/javascript">
+	var session = $.cookie("sessionid");  //验证session是否过期
+	//验证信息
+	$(function(){
+		//验证
+		$("#updateNodes").validationEngine({
+			inlineValidation: false, //提交表单时验证 
+			success : false,         //false表示全部通过验证了才能提交表单，true表示随时都可以提交表单
+			promptPosition : "bottomLeft"	
+		});	
+	});	
+	//打开界面，赋值
+	$(function(){
+		setValues(parent.getNodeById(parent.updateId))
+	});
+
+	function setValues(data) {
+		$("#NodesName").val(data.title);
+	}
+	function updateNodes(d, data, initData) {
+		//如果没通过验证，阻止提交表单
+		if(!$("#updateNodes").validationEngine("validate")){
+			return;
+		}
+		var name = $("#NodesName").val();
+		var params = {
+			"method":"chnodetitle",
+			"sessionid":session,
+			"id":parent.getNodeById(parent.updateId).id,
+			"title":name	
+		}
+		$.post("/upapi",JSON.stringify(params),function(data){
+			window.top.validateSession(data);
+			if(data.retcode==0){
+				window.top.sure_show("操作成功！");
+				var treeNodes = window.top.getTreeNode();
+				if (treeNodes.length == 1) {
+					initData(treeNodes[0].id);
+				}
+				d.close();
+				
+			}else{
+				window.top.sure_show("操作失败！");
+			}	
+		});
+	}
+</script>	
+</head>
+
+<body>
+	<div class="alert-bg">
+        <form id="updateNodes">
+            <table class="alert-table">
+                <tr>
+                    <th><span class="red">*</span>节点名称：</th>
+                    <td>
+                        <input type="text" class="ipt validate[required]" id="NodesName"/>
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+</body>
+</html>

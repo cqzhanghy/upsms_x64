@@ -1,0 +1,744 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>视频融合服务系统</title>
+<link href="css/index.css" rel="stylesheet" type="text/css"/>
+<link href="css/core.css" rel="stylesheet" type="text/css"/>
+<link href="js/zTree/jquery_zTree/css/zTreeStyle.css" rel="stylesheet" type="text/css"/>
+<script src="js/jquery-1.7.2.min.js" type="text/javascript"></script>
+<script src="js/uc-ui.js" type="text/javascript"></script>
+<script type="text/javascript" src="dist/jquery.cookie.js"></script>
+<script type="text/javascript" src="js/zTree/jquery_zTree/js/jquery.ztree.js"></script>
+<!--日期控件-->
+<script type="text/javascript" src="js/MyDatePicker/WdatePicker.js"></script>
+<!--[if lte IE 7]>
+<script type="text/javascript" src="js/json2.js"></script>
+<![endif]-->
+<script type="text/javascript">
+var session = $.cookie("sessionid");
+function validateSession(){
+	var params ={
+		"method":"list_all_user",
+		"sessionid":session	
+	}
+	$.post("/upapi",JSON.stringify(params),function(data){
+		validateSession2(data);
+	});
+}
+function validateSession2(data){
+	if(data.retcode=="-3002"){
+		window.location.href="/login.html";
+	}
+}
+</script>
+<link rel="stylesheet" type="text/css" href="js/MyDatePicker/skin/WdatePicker.css"/>
+</head>
+
+<body>
+    <div class="index-max">
+    	<!------top背景logo及操作-------->
+    	<div class="index-top">
+        	<div class="logo"></div>
+            <div class="top-oprate">
+            	<ul>
+                    <li><span class="top-man"></span><span class="top-user" id="index-user"></span></li>
+                    <li id="update-passw"><span class="top-password"></span><a href="javascript:void(0);">修改密码</a></li>
+                    <li id="logout"><span class="top-exit"></span><a>退出</a></li>
+                </ul>
+            </div>
+        </div>   
+        <!------menu导航-------->
+        <div class="index-menu">
+        	<ul>
+            	<li class="selected" id="video"><span class="menu-look"></span><a>视频浏览</a></li>
+                <li id="play"><span class="menu-play"></span><a>视频回放</a></li>
+                <li id="analyse"><span class="menu-analyse"></span><a>视频分析</a></li>
+                <li id="zuzhi"><span class="menu-internet"></span><a>监控资源</a></li>
+                <li id="share"><span class="menu-share"></span><a target="index-iframe">资源共享</a></li>
+                <li id="user"><span class="menu-statistics"></span><a target="index-iframe">用户配置</a></li>
+                <li id="system"><span class="menu-system"></span><a target="index-iframe">系统设置</a></li>
+                <li class="hide"><span class="menu-search"></span><a href="iframe0.html" target="index-iframe">iframe页面传值</a></li>
+            </ul>
+        </div>
+        <!------首页辅助信息显示------>
+        <div class="index-message hide">
+        
+        	<div class="index-man">【用户：<span>李登辉</span>】</div>
+            <div class="index-position">当前位置：个人中心 > 我的工作 > 案件登记</div>
+            <div class="index-weather">【今天是2015年1月27日　　星期四　　空气：<strong>良</strong>】</div>
+        </div>
+        <!------中间内容主体-------->
+        <div class="index-content">
+            	<!--  左侧菜单 -->
+            	<div class="menu-left">
+                	<!--  左侧导航显示  -->
+                	<ul class="menu-max">
+                    	<li class="selected"><a><img src="img/li-show.png"/>系统设置</a>
+                        	<ul>
+                            	<li class="selected"><a href="analyseSystem.html" target="index-iframe"><span class="li-img"></span>视频分析应用平台设置</a></li>
+                                <li><a href="load.html" target="index-iframe"><span class="li-img"></span>控件下载</a></li>
+                                <li><a href="systemRepair.html" target="index-iframe"><span class="li-img"></span>系统维护</a></li>
+                                <li><a href="internet.html" target="index-iframe"><span class="li-img"></span>网络设置</a></li>
+                                <li><a href="root.html" target="index-iframe"><span class="li-img"></span>授权导入</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <div class="menu-title">
+                    	<img src="img/li-show.png"/><span class="tit">监控区域</span><span class="refresh" title="刷新"></span>
+                    	<div class="panelbar panelbar2" style="float:right; margin-left:0; margin-right:10px;">
+                        	<button class="panelbar-add" id="addNodes" title="新增"><span class="icon"></span></button>
+                            <button class="panelbar-upd" id="updNodes" title="修改"><span class="icon"></span></button>
+                            <button class="panelbar-del" id="delNodes" title="删除"><span class="icon"></span></button>
+                        </div>
+                    </div>
+                    <div class="menu-tree">
+                        <div id="videoTree" class="ztree ztree-show">
+
+                        </div>
+                        <div class="play-show">
+                        	<div class="title">
+                            	<img src="img/li-show.png"/><span class="tit">历史记录</span>
+                            </div>
+                            <div class="search">
+                            	<table class="search-table search-table2">
+                                	<tr>
+                                    	<th>开始时间：</th>
+                                        <td>
+                                        	<input type="text" id="startTime" class="search-ipt-time search-time2 Wdate" onfocus="WdatePicker({dateFmt:'yyyy-MM-dd HH:mm:ss'});"/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                    	<th>结束时间：</th>
+                                        <td>
+                                        	<input type="text" id="endTime" class="search-ipt-time search-time2 Wdate" onfocus="WdatePicker({dateFmt:'yyyy-MM-dd HH:mm:ss'});"/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                    	<th></th>
+                                        <td>
+                                        	<span class="btn btn-search" id="searchHistory">
+                                            	<span class="btn-img"></span>
+                                                <span class="btn-title">查询</span>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="cont">
+                            	<ul id="HistoryId"></ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 收折区域 -->
+            	<div class="index-click">
+                	<div class="click-img"></div>
+                </div>
+            	<!--  左侧主体  -->
+                <div class="index-container">
+                    <div class="index-container-iframe">
+                    	<iframe class="index-iframe" id="index-iframe" frameborder="0" src="video.html" name="index-iframe"></iframe>
+                    </div>
+                </div>
+        </div>
+        <!------bottom-------->
+        <div class="index-bottom">
+        	<span class="copyright">版权所有：重庆扬讯软件技术有限公司<span>当前版本号：<strong class="data-cord"></strong></span></span>
+        </div>
+        
+        <div style="display:none">
+        	<object id="checkObject" type='application/x-upview'></object>
+        </div>
+         <div style="display:none">
+        	<canvas id="checkCanvas" type='application/x-upview'></canvas>
+        </div>
+        
+    </div>
+</body>
+</html>
+<script type="text/javascript">
+	//注销
+	jQuery("#logout").live("click",function(){
+		logout();	
+	});
+	function logout(){
+		var params ={
+			"method":"logout",
+			sessionid:session
+		}
+		$.post("/upapi",JSON.stringify(params),function(data){
+			window.top.validateSession(data);
+			if(data.retcode=="0"){
+				$.cookie("sessionid","");
+				window.location.href="/login.html";
+			}
+		});	
+	}
+	//监测ie浏览器是否安装插件
+	function isIE(show){
+		var pp = document.getElementById("checkCanvas");
+		var unde = typeof(pp.getContext);
+		if(show){
+			var fla = false;
+			var plugin=document.getElementById("checkObject");
+			if(!!window.ActiveXObject || "ActiveXObject" in window){
+				if(typeof(plugin.version) == "undefined" && unde == 'undefined') {
+					alert("您没有安装upview视频控件，导致不能播放视频，请先下载upvie控件！");	
+					window.location.href = "/UpViewWeb.exe";
+				}else{
+					fla = true;
+				}
+			}else{
+				//监测ie外浏览器安装插件				
+				if(navigator.plugins){
+					for(var i=0; i<navigator.plugins.length; i++){
+						if(navigator.plugins[i].name.toLowerCase().indexOf("upview")>=0){
+							fla = true;
+						}
+					}	
+				}
+				if(fla == false && unde == 'undefined'){
+					alert("您没有安装upview视频控件，导致不能播放视频，请先下载upvie控件！");		
+					window.location.href = "/UpViewWeb.exe";
+				}
+			}	
+			return fla;	
+		}else{
+			var fla = false;
+			var plugin=document.getElementById("checkObject");
+			if(!!window.ActiveXObject || "ActiveXObject" in window){
+				if(typeof(plugin.version) == "undefined" && unde == 'undefined') {
+					alert("您没有安装upview视频控件，导致不能播放视频，请先下载upvie控件！");	
+					window.location.href = "/UpViewWeb.exe";
+				}else{
+					fla = true;
+				}
+			}else{
+				//监测ie外浏览器安装插件
+				if(navigator.plugins){
+					for(var i=0; i<navigator.plugins.length; i++){
+						if(navigator.plugins[i].name.toLowerCase().indexOf("upview")>=0){
+							fla = true;
+						}
+					}	
+				}
+				if(fla == false && unde == 'undefined'){
+					alert("您没有安装upview视频控件，导致不能播放视频，请先下载upvie控件！");		
+					window.location.href = "/UpViewWeb.exe";
+				}
+			}	
+			return fla;	
+		}
+	}
+		
+	//启用dialog
+	$(function(){
+		//打开页面 树节点显示数据
+		//修改密码，主页用户名
+		validateSession();
+		var name = $.cookie("user1");
+		if(name!=="admin"){
+			$(".index-menu ul li").each(function(index,ele){
+				if(index>1){
+					$(this).hide();
+				}
+			})
+		}
+		jQuery("#index-user").text(name);
+		$(".ztree-show").attr("id","videoTree");
+		$(".panelbar2").hide();
+		initTree();	
+		var d = null;
+		var dia_log ={
+			"width":400,
+			"height":250,
+			"title":"修改密码", //定义标题	
+			"url":"index-updataPassword.html", 
+			save:function(){
+				d.iframe.contentWindow.updatePassword(d);
+			}
+		}
+		$("#update-passw").live("click",function(){
+			d = dialog(dia_log);	
+			return false;
+		});
+		//左侧tree树形显示区域
+		$(".refresh").show();
+		//显示版本号
+		var params2 = {
+			"method":"get_version",
+			"sessionid": session	
+		} 	
+		$.post("/upapi",JSON.stringify(params2),function(data){
+			if(data.retcode == 0){
+				$(".data-cord").text(data.version);
+			}	
+		});
+		//isIE(false);
+	});	
+	
+	//得到选中节点的Id
+	var fns = [];
+	var types = {
+			TREE_NODE_CLICK : "TREE_NODE_CLICK"
+		};
+	function registerFn(fn, type) {
+		for (var i=0;i<fns.length;i++){
+			if (fns[i].type == type && fns[i].fn == fn) {
+				return;
+			}
+		}
+		fns.push({fn:fn,type:type});
+	}
+	//选中父节点,并得到节点集合
+	function getTreeNode(){
+		if(zTreeObj!=null){
+			return zTreeObj.getSelectedNodes();
+		}else{
+			return null;
+		}
+	}
+	//end
+	function initTree(){
+		 var params = {
+			"method":"get_dir",
+			sessionid:session,
+			_v : new Date().getTime()
+		}
+		//addNode();
+		$.post("/upapi",JSON.stringify(params),function(data){
+			if(data.retcode==0){
+				if(data.dir){
+					for (var i=0;i< data.dir.length;i++){
+						if (data.dir[i].pid == "root") {
+							//data.dir[i].title = "重庆扬讯";
+							break;
+						}	
+					}
+				}else{
+					/*data.dir = [{
+							pid : "0",
+							id : "root",
+							title : "监控区域"
+						}];*/	
+				}
+				getAllNodes(data.dir, zTreeShow);
+			}else{
+				return false;
+			}
+		});
+	}
+	//定义ztree显示的数据
+	var zTreeObj = null; 
+	function zTreeShow(zTreeNodes){
+		var setting = { 
+			//1.定义要显示的值
+			treeTd:"videoTree",  //id
+			data : {
+				key : {
+					name:"title"
+				},	
+				simpleData : {
+					enable : true, //表示确定显示为简单数据，如果设置为 true，务必设置 setting.data.simpleData 内的其他参数: idKey / pIdKey / rootPId，并且让数据满足父子关系
+					idKey : "id",  //取得数据库中的id
+					pIdKey: "pid", //id,接口中定义的id
+					rootPId : -1  // 
+				},
+				keep : {
+					leaf : true,
+					parent : true
+				}
+			},
+			callback : {
+				onClick : function(event, treeId, treeNode, clickFlag) {
+					for (var i=0;i<fns.length;i++){
+						if (fns[i].type == types.TREE_NODE_CLICK) {
+							try {
+								fns[i].fn(treeNode);
+							} catch(e){}
+							
+						}
+					}
+				}
+			},
+			view : {
+					selectedMulti: false,
+					removeHoverDom : function(treeId, treeNode) {
+						$("#diyBtn_addspan_"+treeNode.id).unbind().remove();
+						$("#diyBtn_add_" +treeNode.id).unbind().remove();
+						$("#diyBtn_editspan_"+treeNode.id).unbind().remove();
+						$("#diyBtn_edit_" +treeNode.id).unbind().remove();
+						$("#diyBtn_deletespan_"+treeNode.id).unbind().remove();
+						$("#diyBtn_delete_" +treeNode.id).unbind().remove();
+					}
+			},
+		}
+		//
+		zTreeObj = $.fn.zTree.init($("#videoTree"), setting, zTreeNodes);
+		zTreeObj.expandAll(true);
+		zTreeObj.selectNode(zTreeObj.getNodes()[0]);
+		//定义点击父节点时展开当前父节点下子节点	
+	}
+	
+	/*监控区域 没有子节点情况*/
+	function initTree2(){
+		 var params = {
+			"method":"get_dir",
+			sessionid:session,
+			_v : new Date().getTime()
+		}
+		//addNode();
+		$.post("/upapi",JSON.stringify(params),function(data){
+			if(data.retcode==0){
+				if(data.dir){
+					for (var i=0;i< data.dir.length;i++){
+						if (data.dir[i].pid == "root") {
+							//data.dir[i].title = "重庆扬讯";
+							break;
+						}	
+					}
+				}else{
+					/*data.dir = [{
+							pid : "0",
+							id : "root",
+							title : "监控区域"
+						}];	*/
+				}
+				getAllNodes2(data.dir, zTreeShow2);
+			}else{
+				return false;
+			}	
+		});
+	}
+	function zTreeShow2(zTreeNodes){
+		var setting = { 
+			//1.定义要显示的值
+			treeTd:"videoTree",  //id
+			data : {
+				key : {
+					name:"title"
+				},	
+				simpleData : {
+					enable : true, //表示确定显示为简单数据，如果设置为 true，务必设置 setting.data.simpleData 内的其他参数: idKey / pIdKey / rootPId，并且让数据满足父子关系
+					idKey : "id",  //取得数据库中的id
+					pIdKey: "pid", //id,接口中定义的id
+					rootPId : -1  // 
+				},
+				keep : {
+					leaf : true,
+					parent : true
+				}
+			},
+			callback : {
+				onClick : function(event, treeId, treeNode, clickFlag) {
+					for (var i=0;i<fns.length;i++){
+						if (fns[i].type == types.TREE_NODE_CLICK) {
+							try {
+								fns[i].fn(treeNode);
+							} catch(e){}
+						}
+					}
+				}
+			},
+			view : {
+					selectedMulti: false,
+					removeHoverDom : function(treeId, treeNode) {
+						$("#diyBtn_addspan_"+treeNode.id).unbind().remove();
+						$("#diyBtn_add_" +treeNode.id).unbind().remove();
+						$("#diyBtn_editspan_"+treeNode.id).unbind().remove();
+						$("#diyBtn_edit_" +treeNode.id).unbind().remove();
+						$("#diyBtn_deletespan_"+treeNode.id).unbind().remove();
+						$("#diyBtn_delete_" +treeNode.id).unbind().remove();
+					}
+			},
+		}
+		//定义点击父节点时展开当前父节点下子节点
+		for(var i=0;i<zTreeNodes.length;i++) {
+			if(zTreeNodes[i].isParent == false){
+				zTreeNodes.splice(i--,1);
+			}
+		}
+		zTreeObj = $.fn.zTree.init($("#videoTree"), setting, zTreeNodes);
+		zTreeObj.expandAll(true);
+		zTreeObj.selectNode(zTreeObj.getNodes()[0]);		
+	}
+	
+	function getAllNodes(zTreeNodes, callback) {
+		for (var i=0;i<zTreeNodes.length;i++) {
+			zTreeNodes[i].isParent = true;
+		}
+		var params = {
+			"method" : "get_all_node",
+			"sessionid" : session
+		};
+		$.post("/upapi", JSON.stringify(params), function(data) {
+			curNodes = data.node;
+			for(var i=0;i<data.node.length;i++) {
+				data.node[i].isParent = false;
+			}
+			callback(zTreeNodes.concat(data.node));
+		});
+	}
+	function getAllNodes2(zTreeNodes, callback) {
+		for(var i=0;i<zTreeNodes.length;i++) {
+			zTreeNodes[i].isParent = true;
+		}
+		var params = {
+			"method" : "get_all_node",
+			"sessionid" : session
+		};
+		$.post("/upapi", JSON.stringify(params), function(data) {
+			curNodes = data.node;
+			for(var i=0;i<data.node.length;i++) {
+				data.node[i].isParent = false;
+			}
+			callback(zTreeNodes.concat(data.node));
+		});
+	}
+	/*头部新增*/
+	function add_Nodes(){
+		//1.点击新增的时候必须选中一个父节点
+		var treeNodes = getTreeNode();
+		if(treeNodes.length == 1){
+			var	pid = treeNodes[0].id;
+		}else{
+			alert("请选择一个节点");	
+			return;
+		}
+		var d = null;
+		var dia_log ={
+			"width":400,
+			"height":200,
+			"title":"添加监控区域", //定义标题	
+			"url":"addNodes.html",
+			save:function(){
+				d.iframe.contentWindow.addNodes(d, pid, initTree);
+			}
+		}
+		d = new dialog(dia_log);			
+	}
+	$("#addNodes").live("click",function(){
+		add_Nodes();	
+	});
+	
+	/*头部修改*/
+	function upd_Nodes(){
+		//1.点击新增的时候必须选中一个父节点
+		var treeNodes = getTreeNode();
+		if(treeNodes.length == 1){
+			var	id = treeNodes[0].id;
+			var	pid = treeNodes[0].pid;
+			var tit = treeNodes[0].title;
+		}else{
+			alert("请选择一个节点");
+			return;	
+		}
+		var d = null;
+		var dia_log ={
+			"width":400,
+			"height":200,
+			"title":"修改监控区域", //定义标题	
+			"url":"updateNodes.html",
+			save:function(){
+				d.iframe.contentWindow.updateNodes(d,id, pid, initTree,tit);
+			},onload : function() {
+				d.iframe.contentWindow.setNodes(tit);
+			}
+		}
+		d = dialog(dia_log);			
+	}
+	$("#updNodes").live("click",function(){
+		upd_Nodes();
+	});
+	
+	/*头部删除*/
+	function del_Nodes(){
+		//1.点击新增的时候必须选中一个父节点
+		var treeNodes = getTreeNode();
+		var pa;
+		if(treeNodes.length == 1){
+			var	pid = treeNodes[0].id;
+			var tit = treeNodes[0].title;
+			if(treeNodes[0].pid == -1 && treeNodes[0].isParent == true){
+				alert("不能删除根节点！");	
+				return false;
+			}
+			pa = treeNodes[0].isParent;
+		}else{
+			alert("请选择一个节点");	
+			return;
+		}
+		var d = null;
+		var dia_log ={
+			"width":300,
+			"height":150,
+			"title":"删除监控区域", //定义标题	
+			"url":"sureIframe.html",
+			save:function(){
+				dele();
+				d.close();
+			}	
+		}
+		d = dialog(dia_log);	
+		function dele(){	
+			//删除组织节点
+			var params = {};
+			var params2 = {
+				"method":"del_dir",
+				"sessionid":session,
+				"id":pid,
+				"title":tit
+			}
+			//删除资源节点
+			var parmas3 = {
+				 "method":"del_node",
+				 "sessionid":session,
+				 "id":pid
+			} 
+			if(pa){
+				params = params2;
+			}else{
+				params = parmas3;	
+			}
+			
+			$.post("/upapi",JSON.stringify(params),function(data){
+				if(data.retcode==0){
+					window.top.sure_show("删除成功！");
+					initTree2();
+				}else{ 
+					window.top.sure_show("删除失败！");
+				}	
+			});	
+		}
+		return false;		
+	}
+	$("#delNodes").live("click",function(){
+		del_Nodes();
+	});
+	/*监控区域*/
+	$("#zuzhi").live("click",function(){
+		validateSession();
+		$(".ztree").empty();
+		$(".menu-max").hide();	
+		$(".menu-tree").show();
+		$(".menu-title").show();
+		parent.document.getElementById("index-iframe").contentWindow.location.href="zuzhi.html";
+		$(".ztree-show").attr("id","videoTree");
+		//定义左边菜单内容 
+		$(".menu-left .tit").text("监控区域");
+		$(".panelbar2").show();
+		$(".ztree").css("bottom",0);
+		$(".ztree").empty();
+		$(".play-show").hide();
+		index_click3();
+		initTree2();
+		$(".refresh").hide();
+		//子节点隐藏
+	});
+	
+	//视频回放
+	$("#play").live("click",function(){
+		validateSession();
+		$(".ztree").empty();
+		$(".menu-max").hide();	
+		$(".menu-tree").show();
+		$(".menu-title").show();
+		//parent.document.getElementById("index-iframe").contentWindow.location.href = "play.html";
+		parent.document.getElementById("index-iframe").contentWindow.location.href= "play3.html";
+		//定义左边菜单内容 
+		$(".menu-left .tit").text("录像回放");
+		$(".panelbar2").hide();
+		$(".ztree").empty();
+		$(".ztree").css("bottom",300);
+		$(".play-show").show();
+		index_click3();
+		initTree();
+		$(".refresh").show();
+	});
+	//浏览
+	$("#video").live("click",function(){
+		validateSession();
+		$(".ztree").empty();
+		$(".menu-max").hide();	
+		$(".menu-tree").show();
+		$(".menu-title").show();
+		parent.document.getElementById("index-iframe").contentWindow.location.href = "video.html";
+		$(".menu-left .tit").text("视频浏览");
+		$(".panelbar2").hide();
+		$(".ztree").empty();
+		$(".ztree").css("bottom",0);
+		$(".play-show").hide();
+		index_click3();
+		initTree();
+	});	
+	
+	//用户配置
+	$("#user").live("click",function(){
+		validateSession();
+		$(".ztree").empty();
+		$(".menu-max").hide();	
+		$(".menu-tree").show();
+		$(".menu-title").show();
+		index_click2();
+		parent.document.getElementById("index-iframe").contentWindow.location.href = "user-list.html";
+	});	
+	//资源共享
+	$("#share").live("click",function(){
+		validateSession();
+		$(".ztree").empty();
+		$(".menu-max").hide();	
+		$(".menu-tree").show();
+		$(".menu-title").show();
+		$(".panelbar2").hide();
+		index_click2();
+		parent.document.getElementById("index-iframe").contentWindow.location.href = "share.html";
+	});	
+	
+	//视频分析界面
+	$("#analyse").live("click",function(){
+		validateSession();
+		$(".ztree").empty();
+		$(".menu-max").hide();	
+		$(".menu-tree").show();
+		$(".menu-title").show();
+		parent.document.getElementById("index-iframe").contentWindow.location.href = "analyse.html";	
+		//定义左边菜单内容 
+		$(".menu-left .tit").text("视频分析");
+		$(".panelbar2").hide();
+		$(".play-show").hide();
+		$(".ztree").css("bottom",0);
+		index_click3();
+		initTree();
+		$(".refresh").show();
+	});
+	
+	//系统设置
+	$("#system").live("click",function(){
+		validateSession();
+		parent.document.getElementById("index-iframe").contentWindow.location.href = "analyseSystem.html";	
+		$(".ztree").empty();
+		$(".menu-max").show();	
+		$(".menu-tree").hide();
+		$(".menu-title").hide();
+		index_click3();
+	});
+	$(".refresh").live("click",function(){
+		initTree();
+	});
+//返回密码到index2.html页面中
+/*function passWord(passw){
+	var str = window.location.search;
+	if(str.indexOf(passw)!=-1){
+		var pos_start = str.indexOf(passw) + passw.length +1;
+		var pos_end = str.indexOf("&",pos_start);
+		if(pos_end==-1){
+			return str.substring(pos_start);	
+		}else{
+						
+		}	
+	}
+}*/
+</script>

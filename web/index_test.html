@@ -1,0 +1,431 @@
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=gb2312" /> 
+<head>
+<title>test page for upsms web api</title>
+</head>
+	<link rel="stylesheet" href="zTree_v3-master/css/demo.css" type="text/css">
+	<link rel="stylesheet" href="zTree_v3-master/css/zTreeStyle/zTreeStyle.css" type="text/css">	
+    <script language="javascript" type="text/javascript" src="jquery-1.11.2.js"></script>
+	<script type="text/javascript" src="jquery.md5.js"></script>
+	<script type="text/javascript" src="zTree_v3-master/js/jquery.ztree.core-3.5.js"></script>
+	<script type="text/javascript" src="zTree_v3-master/js/jquery.ztree.excheck-3.5.js"></script>
+	<script type="text/javascript" src="zTree_v3-master/js/jquery.ztree.exedit-3.5.js"></script>
+
+	<script type="text/javascript" src="dist/jquery.json.min.js"></script>
+	<script type="text/javascript" src="dist/jquery.cookie.js"></script>
+    <script type="text/javascript">
+	var zTreeObj;
+	var select_dir;
+	function zTreeOnMouseDown(event, treeId, treeNode) 
+	{
+     //   alert(treeNode.tId + ", " + treeNode.name  + ", " + treeNode["title"]);
+    };
+	function zTreeOnClick(event, treeId, treeNode) 
+	{
+	    if(treeNode.isParent)
+		{
+		    select_dir = treeNode.id;
+			return;
+		}
+		var div = $("#pre_view");
+		div.empty();
+		if(is_pc())
+		{
+		    pc_play(treeNode);
+		}
+		else
+		{
+		    mobile_play(treeNode);
+		}
+    };
+
+	function pc_play(treeNode)
+	{
+	    var div = $("#pre_view");
+		div.empty();
+		div.append("<object id='plugin0' type='application/x-upview' style='width:100%;height:100%'>");
+		var id = treeNode.id;
+		var addr = GetHostAddr();
+		var user = $("#login_user").val();
+	    var passw = $.md5($("#login_passw").val());
+		var plugin2 = document.getElementById("plugin0");
+		var plugin = $("#plugin0")[0];
+		plugin.RealPlay("upsms",addr,user,passw,id);
+	}
+	
+	function mobile_play(treeNode)
+	{
+	    var div = $("#pre_view");
+		var id = treeNode.id;
+		var str = "<video src='nodes/";
+		str += id;
+		str += "/live/hls/m3u8.M3U8' controls='controls' autoplay='autoplay' style='width:100%;height:100%'>“测试视频格式”</video>"
+		div.empty();		
+		div.append(str);
+	}
+	function zTreeOnDblClick(event, treeId, treeNode)
+	{
+	    if(treeNode.isParent)
+		{
+		    return;
+		}
+		var div = $("#pre_view");
+		div.empty();
+		if(is_pc())
+		{
+		    pc_play(treeNode);
+		}
+		else
+		{
+		    mobile_play(treeNode);
+		}
+  //      alert(treeNode.id);
+    };
+	function DelDir(treeNode)
+	{
+	    var obj = {};
+	    obj['method'] = "del_dir";
+        obj['sessionid'] = LoginID();
+		obj['id'] = treeNode.id;
+		var jsonstr = $.toJSON(obj);
+        $.post("/upapi",jsonstr,rec_data);	
+	}
+	function DelNode(treeNode)
+	{
+	    var obj = {};
+	    obj['method'] = "del_node";
+        obj['sessionid'] = LoginID();
+		obj['id'] = treeNode.id;
+		var jsonstr = $.toJSON(obj);
+        $.post("/upapi",jsonstr,rec_data);	
+	}
+	function zTreeOnRemove(event, treeId, treeNode) 
+	{
+	    if(treeNode.isParent)
+		{
+		    DelDir(treeNode);
+		}
+         else
+        {
+		     DelNode(treeNode);
+		}		 
+    }
+	
+	function ChanDirTitle(treeNode)
+	{
+	    var obj = {};
+	    obj['method'] = "change_dir_title";
+        obj['sessionid'] = LoginID();
+		obj['id'] = treeNode.id;
+		obj['title'] = treeNode.title;
+		var jsonstr = $.toJSON(obj);
+        $.post("/upapi",jsonstr,rec_data);
+	}
+	
+	function ChanNodeTitle(treeNode)
+	{
+	    var obj = {};
+	    obj['method'] = "chnodetitle";
+        obj['sessionid'] = LoginID();
+		obj['id'] = treeNode.id;
+		obj['title'] = treeNode.title;
+		var jsonstr = $.toJSON(obj);
+        $.post("/upapi",jsonstr,rec_data);
+	}
+    function zTreeOnRename(event, treeId, treeNode, isCancel) 
+	{
+	    if(isCancel)
+		{
+		    return;
+		}
+		if(treeNode.isParent)
+		{
+		    ChanDirTitle(treeNode);
+		}
+		else
+		{
+		ChanNodeTitle(treeNode);
+		}
+    }
+
+	function OnGetNode(data, status)
+	{
+	    if("success" != status)
+		{
+		    alert(start);
+		    return;
+		}
+		if("success" != data.ret)
+		{
+		    alert(data.ret);
+		    return;
+		}
+		var nodes = data["node"];
+		var pid   = data["pid"];
+		for(var i=0; i<nodes.length; i++)  
+        {  
+            nodes[i]["pId"] = nodes[i]["pid"];
+			nodes[i]["isParent"] = false;
+        }  
+		var tree = $.fn.zTree.getZTreeObj("tree");
+		var treeNodes = tree.getNodesByParam("id", pid, null);
+		if(0 == treeNodes.length)
+		{
+		    return;
+		}
+		var treeNode = treeNodes[0];
+		tree.addNodes(treeNode,nodes,false);
+	}
+	function zTreeBeforeExpand(treeId, treeNode) 
+	{
+	    if(treeNode.isGetNode)
+		{
+		    return;
+		}
+	    var obj = {};
+	    obj['method'] = "get_node";
+        obj['sessionid'] = LoginID();
+		obj['id'] = treeNode.id;
+		var jsonstr = $.toJSON(obj);
+        $.post("/upapi",jsonstr,OnGetNode);
+		treeNode["isGetNode"] = true;
+        return true;
+    };
+
+
+	setting = {		
+		callback: 
+		{
+		    onMouseDown: zTreeOnMouseDown,
+			onDblClick: zTreeOnDblClick,
+			onClick: zTreeOnClick,
+			onRemove: zTreeOnRemove,
+			onRename: zTreeOnRename,
+			beforeExpand: zTreeBeforeExpand
+	    },
+		data:
+		{
+		    key:
+			{
+			    name:"title"
+			},
+			simpleData: 
+			{
+			    enable: true,
+			    idKey: "id",
+			    pIdKey: "pId",
+			    rootPId: ""
+		    }
+		},
+		edit:
+		{
+		    enable: true,
+		    showRemoveBtn: true,
+		    removeTitle: "删除节点"
+		}
+	};
+	zTreeNodes = [];
+    function GetHostAddr()
+	{
+	    //获取当前网址，如： http://localhost:8080/Tmall/index.jsp 
+        var curWwwPath=window.document.location.href; 
+        //获取主机地址之后的目录如：/Tmall/index.jsp 
+        //var pathName=window.document.location.pathname; 
+		var pathName=curWwwPath.substring(7);
+        var pos=pathName.indexOf("/"); 
+        //获取主机地址，如： http://localhost:8080 
+        var localhostPaht=pathName.substring(0,pos); 
+		return localhostPaht;
+	}
+    function is_pc()
+	{
+         var os = new Array("Android","iPhone","Windows Phone","iPod","BlackBerry","MeeGo","SymbianOS");  // 其他类型的移动操作系统类型，自行添加
+        var info = navigator.userAgent;
+        var len = os.length;
+        for (var i = 0; i < len; i++)
+        {
+            if (info.indexOf(os[i]) > 0)
+	        {
+                return false;
+            }
+        }
+        return true;
+    }
+	
+	function LoginID()
+	{
+	    return $.cookie("login_id");
+	}
+	function rec_login(data, status)
+	{
+  	    var ret = data["ret"];
+	    if("success" != ret)
+		{
+		   alert("login failed status = " + ret);
+		}
+		var login = data["sessionid"];
+		var jsonstr = $.toJSON(data);
+		var method = data["method"];
+		 $.cookie("login_id", login); 
+	    GetNodes();
+	}
+	function rec_data(data, status)
+	{
+	   var jsonstr = $.toJSON(data);
+	   var method = data["method"];
+	   var ret    = data["ret"];
+       alert(method + " : " + ret);
+	}
+	
+	function Login()
+	{
+	    var jsonObj = {};
+	    jsonObj['method'] = "login";
+        jsonObj['user'] = $("#login_user").val();
+	    jsonObj['passw'] = $.md5($("#login_passw").val());
+	    var jsonstr = $.toJSON(jsonObj);
+        $.post("/upapi",jsonstr,rec_login);		
+	}
+	function Logout()
+	{
+	    var jsonObj = {};
+	    jsonObj['method'] = "logout";
+        jsonObj['sessionid'] = LoginID();
+	    var jsonstr = $.toJSON(jsonObj);
+        $.post("/upapi",jsonstr,rec_data);		
+	}
+	function Adduser()
+	{
+	    var obj = {};
+	    obj['method'] = "add_user";
+        obj['sessionid'] = LoginID();
+		obj['user'] = $("#login_user").val();
+		obj['passw'] = $.md5($("#login_passw").val());
+	    var jsonstr = $.toJSON(obj);
+        $.post("/upapi",jsonstr,rec_data);	
+	}
+	function Deluser()
+	{
+	    var obj = {};
+	    obj['method'] = "del_user";
+        obj['sessionid'] = LoginID();
+		obj['user'] = $("#login_user").val();
+	    var jsonstr = $.toJSON(obj);
+        $.post("/upapi",jsonstr,rec_data);	
+	}
+	function ChangePassw()
+	{
+	    var obj = {};
+	    obj['method'] = "change_passw";
+        obj['sessionid'] = LoginID();
+		obj['old_passw'] = $.md5($("#login_passw").val());
+		obj['new_passw'] = $.md5($("#new_passw").val());
+	    var jsonstr = $.toJSON(obj);
+        $.post("/upapi",jsonstr,rec_data);	
+	}
+	function OnGetNodes(data, status)
+	{
+	    if("success" != status)
+		{
+		    alert(start);
+		    return;
+		}
+		if("success" != data.ret)
+		{
+		    alert(data.ret);
+		    return;
+		}
+		var tree = $("#tree");
+		if(tree)
+		{
+		    tree.empty();
+		}
+		var nodes = data["node"];
+		for(var i=0; i<nodes.length; i++)  
+        {  
+			nodes[i]["isParent"] = false;
+        }  
+		$.fn.zTree.init(tree, setting, nodes);
+		
+	}
+	function GetNodes()
+	{
+	    var obj = {};
+	    obj['method'] = "get_free_node";
+        obj['sessionid'] = LoginID();
+	    var jsonstr = $.toJSON(obj);
+        $.post("/upapi",jsonstr,OnGetNodes);	
+	}
+	
+	function AddDir()
+	{
+	    var obj = {};
+		obj['method'] = "add_dir";
+		obj['sessionid'] = LoginID();
+		obj['pid'] = select_dir;
+		obj['title'] = $("#dir_title").val();
+		var jsonstr = $.toJSON(obj);
+		$.post("/upapi",jsonstr,rec_data);
+		GetDir();
+	}
+	function OnAddNode(data, status)
+	{
+	    getSeconds();
+	}
+	function AddNode()
+	{
+	    var obj = {};
+		obj['method'] = "add_node";
+		obj['sessionid'] = LoginID();
+		obj['type'] = $("#node_type").val();
+		obj['addr'] = $("#node_addr").val();
+		obj['user'] = $("#node_user").val();
+		obj['passw'] = $("#node_passw").val();
+		obj['chanid'] = $("#node_chanid").val();
+		obj['title'] = $("#node_title").val();
+		var jsonstr = $.toJSON(obj);
+		$.post("/upapi",jsonstr,OnAddNode);
+		GetNodes();
+	}
+	function ready()
+	{
+	    $("#login").click(Login);
+	    $("#logout").click(Logout);
+		$("#add_user").click(Adduser);
+		$("#del_user").click(Deluser);
+		$("#change_passw").click(ChangePassw);
+		$("#get_dir").click(GetNodes);
+		$("#add_dir").click(AddDir);
+		$("#add_node").click(AddNode);
+		zTreeObj = $.fn.zTree.init($("#tree"), setting, zTreeNodes);  
+	}
+    $(document).ready(ready);
+    </script>
+<body>
+   <a href="/UpViewWeb.exe">pc端控件下载</a>
+  <br />
+  用户名:<input type="text" name="passw" value="admin" id="login_user" />
+  密  码:<input type="text" name="passw" value="admin" id="login_passw" />
+  <INPUT TYPE="button" value="登录" id="login"/>
+  <INPUT TYPE="button" value="登出" id="logout"/>
+  <INPUT TYPE="button" value="刷新列表" id="get_dir"/>
+  <br />
+  类型：<input type="text" value="hik" id="node_type" />
+  地址：<input type="text" value="192.168.0.248" id="node_addr" />
+  用户名：<input type="text" value="admin" id="node_user" />
+  密码：<input type="text" value="12345" id="node_passw" />
+  通道号：<input type="text" value="1" id="node_chanid" />
+  标题：<input type="text" value="8楼会议室" id="node_title" />
+  <INPUT TYPE="button" value="添加节点" id="add_node"/>
+  <br />
+  <br />
+  <div class="zTreeDemoBackground left" style="display:inline-block;*display:inline;vertical-align:top;">
+		<ul id="tree" class="ztree" style="margin-top:0px;"></ul>
+   </div>
+  <div  id="pre_view" style="width:707px;height:576px;display:inline-block;*display:inline; background-color:black; " >
+  </object>
+  </div>
+  <br />
+  <br />
+</body>
+</html>

@@ -1,0 +1,172 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>视频融合服务系统</title>
+<link href="css/core.css" rel="stylesheet" type="text/css"/>
+<script src="js/jquery-1.7.2.min.js" type="text/javascript"></script>
+<script type="text/javascript" src="dist/jquery.cookie.js"></script>
+<script type="text/javascript" src="js/jquery.md5.js"></script>
+<script src="js/uc-ui.js" type="text/javascript"></script>
+<!-- 验证框架 -->
+<link rel="stylesheet" type="text/css" href="validationengine/css/validationEngine.jquery.css" media="screen" />
+<script type="text/javascript" src="validationengine/js/languages/jquery.validationEngine-zh_CN.js"></script>
+<script type="text/javascript" src="validationengine/js/jquery.validationEngine.js"></script>
+<!-- 验证框架end -->
+<script type="text/javascript">
+	var session = $.cookie("sessionid");  //验证session是否过期
+	//验证信息
+	$(function(){
+		//验证
+		jQuery("#addNodes").validationEngine({
+			inlineValidation: false, //提交表单时验证 
+			promptPosition : "bottomLeft",	
+			success : false
+		});	
+		var x = 3;
+		$(".pan-add2").live("click",function(){
+			var num = $(this).parent().parent().parent().find(".trNodes").length;
+			x++;
+			var tr = $("<tr>"
+							+"<th><span class='pan-add pan-del' style='margin-left:20px;'></span>节点名称"+x
+							+"：</th>"
+							+"<td>"
+								+'<input type="text" class="ipt validate[required] nodesId" name="xx" />'
+							+"</td>"
+							+"<th><span class='red'>*</span>节点通道号"+x
+							+"：</th>"
+							+"<td>"
+								+'<input type="text" class="ipt validate[required,maxSize[16]] NodesName" name="yy"/>'
+							+"</td>"
+						+"</tr>").addClass("trNodes");	
+			$(this).parent().parent().parent().find(".trNodes").eq(num-1).after(tr);
+		});
+		$(".pan-del").live("click",function(){
+			$(this).parent().parent().remove();	
+		});
+		//类型下拉框设置值
+		var params2 = {
+			"method":"get_support_types"	
+		}
+		$.post("/upapi",JSON.stringify(params2),function(data){
+			if(data.retcode == 0){
+				for(var i = 0; i<data.types.length; i++){
+					var option = $("<option>"+data.types[i]+"</option>");
+					$("#NodesLeixing option:first").after(option);	
+				}
+			}	
+		}); 
+	});	
+	//增加资源节点
+	function addZiyuanNodess(d, id, initData){
+		//如果没通过验证，阻止提交表单
+		if(!$("#addNodes").validationEngine("validate")){
+			return false;
+		}
+		var NodesName = $("#NodesName").val();	
+		var NodesUrl = $("#NodesUrl").val();	
+		var NodesLeixing = $("#NodesLeixing option:selected").text();	
+		if(NodesLeixing == $("#NodesLeixing option:first").text()){
+			window.top.sure_show($("#NodesLeixing option:first").text());
+			return;	
+		}
+		var NodesUser = $("#NodesUser").val();	
+		var password = $("#password").val();	
+		var NodesTongdao = $("#NodesTongdao").val();	
+		var chans = [];
+		$(".trNodes").each(function(){
+			var xx = $(this).find("input[name='xx']").val();
+			var yy = parseInt($(this).find("input[name='yy']").val());
+			chans.push({
+				"title" : xx,
+				"chanid" : yy
+			});
+		});
+		var params = {
+			"method":"add_nodes",
+			"sessionid":session,
+			"type":NodesLeixing,
+			"addr":NodesUrl,
+			"user":NodesUser,
+			"passw":password,
+			"chans":chans,
+			"pid":id		
+		}	
+		$.post("/upapi",JSON.stringify(params),function(data){
+			alert(data.retcode);
+			if(data.retcode==0){
+				window.top.sure_show("添加成功！");
+				var treeNodes = window.top.getTreeNode();
+				if(treeNodes.length == 1) {
+					initData(treeNodes[0].id);
+				}
+				d.close();
+			}else{
+				window.top.sure_show("添加失败！");
+			}	
+		});	
+	}
+</script>	
+</head>
+
+<body>
+	<div class="alert-bg" style='padding-bottom:15px;'>
+        <form id="addNodes">
+            <table class="alert-table">
+                <tr class="trNodes">
+                    <th><span class="pan-add pan-add2" style="margin-left:20px;"></span>节点名称1：</th>
+                    <td>
+                        <input type="text" class="ipt validate[required,maxSize[16]] NodesName" name="xx"/>
+                    </td>
+                    <th><span class="red">*</span>节点通道号1：</th>
+                    <td>
+                         <input type="text" class="ipt validate[required,maxSize[256]] NodesTongdao" name="yy"/>
+                    </td>
+                </tr>
+                 <tr class="trNodes">
+                    <th><span class="pan-add pan-del" style="margin-left:20px;"></span>节点名称2：</th>
+                    <td>
+                        <input type="text" class="ipt validate[required,maxSize[16]] NodesName" name="xx"/>
+                    </td>
+                    <th><span class="red">*</span>节点通道号2：</th>
+                    <td>
+                         <input type="text" class="ipt validate[required,maxSize[256]] NodesTongdao" name="yy"/>
+                    </td>
+                </tr>
+                 <tr class="trNodes">
+                    <th><span class="pan-add pan-del" style="margin-left:20px;"></span>节点名称3：</th>
+                    <td>
+                        <input type="text" class="ipt validate[required,maxSize[16]] NodesName" name="xx"/>
+                    </td>
+                    <th><span class="red">*</span>节点通道号3：</th>
+                    <td>
+                         <input type="text" class="ipt validate[required,maxSize[256]] NodesTongdao" name="yy"/>
+                    </td>
+                </tr>
+                <tr>
+                    <th><span class="red">*</span>节点类型：</th>
+                    <td>
+                    	<select id="NodesLeixing" class="ipt-select  validate[required]">
+                        	<option selected="selected">请选择节点类型</option>
+                        </select>
+                    </td>
+                    <th><span class="red">*</span>访问用户名：</th>
+                    <td>
+                         <input type="text" class="ipt validate[required,maxSize[16]]" id="NodesUser"/>
+                    </td> 
+                </tr>
+                 <tr>
+                    <th><span class="red">*</span>访问密码：</th>
+                    <td>
+                         <input type="text" class="ipt validate[required,maxSize[16],minSize[3]]" id="password"/>
+                    </td>
+                    <th><span class="red">*</span>节点地址：</th>
+                    <td>
+                        <input type="text" class="ipt validate[required,custom[ipv4]]" id="NodesUrl"/>
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+</body>
+</html>

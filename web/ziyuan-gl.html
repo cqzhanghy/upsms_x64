@@ -1,0 +1,247 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>视频融合服务系统</title>
+<script src="js/jquery-1.7.2.min.js" type="text/javascript"></script>
+<script type="text/javascript" src="dist/jquery.cookie.js"></script>
+<script src="js/uc-ui.js" type="text/javascript"></script>
+<script type="text/javascript" src="js/simplePagination/jquery.simplePagination.js"></script>
+<link href="js/simplePagination/simplePagination.css" rel="stylesheet" type="text/css"/>
+<link href="css/core.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript">
+	//1.验证session
+	var session = $.cookie("sessionid");
+	var treeNodes;
+	//2.得到数据
+	$(function(){
+		treeNodes = window.top.getTreeNode();
+		if (treeNodes.length == 1) {
+			initData(treeNodes[0].id);
+			getNo();
+		}
+	});
+	function initData(id) {
+		var params = {
+			"method" : "get_node",
+			"sessionid" : session,
+			"id" : id
+		};
+		$.post("/upapi",JSON.stringify(params),function(data){
+			nodes = data.node;
+			function setList(){
+				$("#yes-show").empty();
+				for( var i=0;i < nodes.length; i++){
+					var id = nodes[i].id;
+					var tr = $("<tr>" + 
+									"<td width='35'><input type='checkbox'/></td>"
+									+"<td width='35'>"+(i+1)+"</td>"
+									+'<td name="id" id="'+nodes[i].id+'">'+nodes[i].title+"</td>"
+									+"<td>"+treeNodes[0].title+"</td>"
+							+ "</tr>");	
+					$("#yes-show").append(tr);
+				}		
+			}
+			setList(nodes);
+			lock_tab();
+		});
+	}
+	function getNo(){
+		//得到未关联的资源节点
+		var params2 = {
+			"method":"get_free_node",
+			"sessionid":session
+		};
+		$.post("/upapi",JSON.stringify(params2),function(dat){
+			if(dat.retcode == 0){
+				nodes = dat.node;
+				function setList2(nodes){
+					$("#no-show").empty();
+					var n = 1;
+					//筛选未关联资源
+					for( var j=0;j < nodes.length; j++){
+							var id = nodes[j].id;
+							var tr = $("<tr>" + 
+											"<td width='35'><input type='checkbox'/></td>"
+											+"<td width='35'>"+n+++"</td>"
+											+'<td name="id" id="'+nodes[j].id+'">'+nodes[j].title+"</td>"
+									+ "</tr>");	
+							$("#no-show").append(tr);	
+					}			
+				}	
+				setList2(nodes);
+				lock_tab();
+			}else{
+				window.top.sure_show("获取失败!");		
+			}	
+		});		
+	}
+	//取消节点（使节点没有父节点）
+	$("#cancle").live("click",function(){
+		cancle();
+	});                                                                                                                                                                                            
+	function cancle(){
+		//1.得到id
+		var g = [];
+		var cecks = $("#yes-show tr").find(":checkbox[checked='checked']");
+		if(cecks.length == 0){
+			alert("请选择要取消关联的数据！");
+			return false;	
+		}
+		cecks.each(function(i,v){
+			var id = $(v).parent().parent().find("td[name='id']").attr("id");
+			g.push(id);
+		});
+		var par = {
+			"method":"chnodepid", 
+			"sessionid":session,
+			"ids":g,
+			"pid":""
+		}
+		$.post("/upapi",JSON.stringify(par),function(data){
+			window.top.validateSession(data);
+			if( data.retcode == 0){
+				treeNodes = window.top.getTreeNode();
+				if (treeNodes.length == 1) {
+					initData(treeNodes[0].id);
+					getNo();
+				}
+			}else{
+				window.top.sure_show("操作失败!");
+			}
+			parent.reinit();//调用父级页面方法
+		});
+	}
+	//关联到节点
+	$("#share").live("click",function(){
+		share();
+	});
+	function share(){
+		//1.得到id
+		var g = [];
+		var cecks = $("#no-show tr").find(":checkbox[checked='checked']");
+		if(cecks.length == 0){
+			alert("请选择要关联的数据！");
+			return false;	
+		}
+		cecks.each(function(i,v){
+			var id = $(v).parent().parent().find("td[name='id']").attr("id");
+			g.push(id);
+		});
+		//2.得到父级id
+		var treeNodes = window.top.getTreeNode();
+		var pid = treeNodes[0].id;
+		var par = {
+			"method":"chnodepid", 
+			"sessionid":session,
+			"ids":g,
+			"pid":pid
+		}
+		$.post("/upapi",JSON.stringify(par),function(data){
+			if( data.retcode == 0){
+				window.top.sure_show("操作成功!");
+				treeNodes = window.top.getTreeNode();
+				if (treeNodes.length == 1) {
+					initData(treeNodes[0].id);
+					getNo();
+				}
+			}else{
+				window.top.sure_show("操作失败!");
+			}
+			parent.reinit();//调用父级页面方法
+		});	
+	}
+	//点击确定 提供回调函数
+	/*得到用户列表数据*/	
+	function glNodes(d,idd,initData){
+		var treeNodes = window.top.getTreeNode();
+		if(treeNodes.length == 1) {
+			initData(treeNodes[0].id);
+		}
+		window.top.initTree2();
+		//d.close();	
+	}
+	
+</script>
+</head>
+
+<body>
+<div class="ziyuan-top">
+
+	<!--共享左侧列表区域-->
+    <div class="list-max-div list-max-div2">      
+        <!--  列表显示 -->
+        <div class="list-list">
+            <!--  列表操作栏区域  -->
+            <div class="list-nav">
+                <span class="panelbar-title">未关联资源</span>
+            </div>
+            <!--数据列表区域-->
+            <div class="grid">
+                <div class="grid-header">
+                    <div class="grid-tab-thead-father">
+                        <table class="grid-list">
+                            <tr>
+                                <th width="35"><input type="checkbox"/></th>
+                                <th width="35">序号</th>
+                                <th>节点名称</th>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                <div class="grid-tbody">
+                    <div class="grid-tab-tbody-father">
+                        <table class="grid-list" id="no-show">
+                        
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <!-- 列表end  -->
+        </div>
+    </div>
+    
+    <!--共享按钮显示区域-->
+  <div class="ziyuan-show">
+        <div class="ziyuan-show-cont">
+        	<span class="ziyuan-left" id="share" title="共享">关联<img src="img/arrow-right.png" width="24" height="24" /></span>
+            <span class="ziyuan-right" id="cancle" title="取消">取消<img src="img/arrow-left.png" width="24" height="24" /></span>
+      </div>
+  </div>
+    
+    <!--共享右侧列表区域-->
+    <div class="list-max-div list-max-div3">      
+        <!--  列表显示 -->
+        <div class="list-list">
+            <!--  列表操作栏区域  -->
+            <div class="list-nav">
+                <span class="panelbar-title">已关联资源</span>
+            </div>
+            <!--数据列表区域-->
+            <div class="grid">
+                <div class="grid-header">
+                    <div class="grid-tab-thead-father">
+                        <table class="grid-list">
+                            <tr>
+                                <th width="35"><input type="checkbox"/></th>
+                                <th width="35">序号</th>
+                                <th>节点名称</th>
+                                <th>组织机构</th>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                <div class="grid-tbody">
+                    <div class="grid-tab-tbody-father">
+                        <table class="grid-list" id="yes-show">
+						
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <!-- 列表end  -->
+        </div>
+    </div>
+</div>
+</body>
+</html>

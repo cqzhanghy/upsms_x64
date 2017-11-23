@@ -1,0 +1,13 @@
+.ztree * {padding:0; margin:0; font-size:12px; font-family: Verdana, Arial, Helvetica, AppleGothic, sans-serif}
+.ztree {margin:0; padding:5px; color:#333}
+div.zTreeBackground {width:100%;height:100%; text-align:left;}
+div.ztree {border: 0px solid #617775;background: #f0f6e4;width:96%;height:58%; margin-top:2px; overflow-y:scroll;overflow-x:auto;}
+
+div#rMenu {position:absolute; visibility:hidden; top:0;text-align: left;padding: 0;}
+div#rMenu ul li{
+	margin: 1px 0;
+        padding: 0;
+        cursor: pointer;
+        list-style: none outside none;
+        background-color: #DFDFDF;
+}

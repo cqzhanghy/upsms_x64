@@ -1,0 +1,216 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>视频融合服务系统</title>
+<link href="css/core.css" rel="stylesheet" type="text/css"/>
+<script src="js/jquery-1.7.2.min.js" type="text/javascript"></script>
+<script type="text/javascript" src="dist/jquery.cookie.js"></script>
+<script type="text/javascript" src="js/jquery.md5.js"></script>
+<script src="js/uc-ui.js" type="text/javascript"></script>
+<!-- 验证框架 -->
+<link rel="stylesheet" type="text/css" href="validationengine/css/validationEngine.jquery.css" media="screen" />
+<script type="text/javascript" src="validationengine/js/languages/jquery.validationEngine-zh_CN.js"></script>
+<script type="text/javascript" src="validationengine/js/jquery.validationEngine.js"></script>
+<!-- 验证框架end -->
+<script type="text/javascript">
+	var session = $.cookie("sessionid");  //验证session是否过期
+	//验证信息
+	$(function(){
+		//验证
+		jQuery("#addNodes").validationEngine({
+			inlineValidation: false, //提交表单时验证 
+			promptPosition : "bottomLeft",	
+			success : false
+		});	
+		//类型下拉框设置值
+		var params2 = {
+			"method":"get_support_types"	
+		}
+		$.post("/upapi",JSON.stringify(params2),function(data){
+			if(data.retcode == 0){
+				for(var i = 0; i<data.types.length; i++){
+					var option = $("<option>"+data.types[i]+"</option>");
+					$("#NodesLeixing option:first").after(option);	
+				}
+			}	
+		}); 
+		//点击查询 获取通道和节点信息
+		function search_chan(){
+			var params3 = {
+				"method":"querydevchan",
+				"sessionid":session,
+			    "type":$("#NodesLeixing option:selected").text(),
+			    "addr":$("#NodesUrl").val(),
+			    "user":$("#NodesUser").val(),
+			    "passw":$("#password").val(),
+			}	
+			$.post("/upapi",JSON.stringify(params3),function(data){
+				if(data.retcode == 0){					
+					var x = data.chan.length;
+					var num2 = $(".trNodes").length;
+					var fla = false;
+					if(num2 >0){
+						fla = true;
+					}
+					set_chan(x,fla);
+					//如果含有通道信息，则显示该通道信息，没有则不显示
+					for(var i =0; i< x; i++){
+						$(".trNodes").eq(i).find("input[name='xx']").val(data.chan[i].title);	
+						$(".trNodes").eq(i).find("input[name='yy']").val(data.chan[i].chanid);	
+						$(".trNodes").eq(i).find("input[type='checkbox']").attr("checked","checked");
+						$(".trNodes").eq(i).addClass("trNodes2");
+					}
+				}else if(data.retcode== -3009){
+					window.top.sure_show("用户名或密码错误！");	
+				}else{
+					window.top.sure_show('获取信息失败！');	
+				}	
+			});
+		}
+		//生成节点信息和通道信息
+		function set_chan(x,fla){
+			if(fla){
+				return false;	
+			}
+
+			//动态生成节点
+			for( var i =0; i<x; i++){
+				var tfoot = $("<tbody class='trNodes'>" 
+                	+"<tr class='checkboxTr'>"
+                        +"<th colspan='4'>"
+                        	+"<span class='chanTitle'><input type='checkbox' id='a"+(x-i)+"'/><label for='a"+(x-i)+"'>通道信息"+(x-i)+"：</label>"+"</span>"
+                       +"</th>"
+                    +"</tr>"
+                	+"<tr>"
+                    	+"<td colspan='4'>"
+                            +"<div class='TrContent'>"
+                               +"<span class='red'>*</span><label>节点名称：</label>"
+                               +"<input type='text' class='ipt NodesName validate[required,maxSize[16]]' name='xx' />"
+                               +"<div class='red' style='float:left;margin-left:58px'>*</div><label>节点通道号：</label>"
+                               +"<input type='text' class='ipt NodesTongdao readonly validate[required,maxSize[256]]' readonly='readonly' name='yy'/>"
+                            +"</div>"
+                        +"</td>"
+                    +"</tr>"
+                +"</tbody>");	
+				$(".tbody").after(tfoot);		
+			}
+			jQuery("#addNodes").validationEngine();	
+		}
+		/*复选框选中点击*/
+		$(".trNodes .chanTitle input[type='checkbox']").live("click",function(){
+			if($(this).attr("checked")== "checked"){
+				$(this).parent().parent().parent().parent().addClass("trNodes2");
+				/*$(this).parent().parent().parent().siblings().find("input[type='text'][name='xx']").addClass(' validate[required,maxSize[16]]');	
+				$(this).parent().parent().parent().siblings().find("input[type='text'][name='yy']").addClass('validate[required,maxSize[256]]');*/
+				jQuery("#addNodes").validationEngine();	
+			}else{
+				$(this).parent().parent().parent().parent().removeClass("trNodes2");
+				/*$(this).parent().parent().parent().siblings().find("input[type='text'][name='xx']").removeClass(' validate[required,maxSize[16]]');	
+				$(this).parent().parent().parent().siblings().find("input[type='text'][name='yy']").removeClass('validate[required,maxSize[256]]');	*/
+			}
+		});	
+		$("#chanid").live("click",function(){
+			search_chan();
+			//set_chan();	
+		});
+	});	
+	//增加资源节点
+	function addZiyuanNodess(d, id, initData){
+		//如果没通过验证，阻止提交表单
+		if(!$("#addNodes").validationEngine("validate")){
+			return false;
+		}
+		var NodesName = $("#NodesName").val();	
+		var NodesUrl = $("#NodesUrl").val();
+		var NodesLeixing = $("#NodesLeixing option:selected").text();	
+		if(NodesLeixing == $("#NodesLeixing option:first").text()){
+			window.top.sure_show($("#NodesLeixing option:first").text());
+			return;	
+		}
+		var NodesUser = $("#NodesUser").val();	
+		var password = $("#password").val();	
+		var NodesTongdao = $("#NodesTongdao").val();	
+		var chans = [];
+		//判断选中通道的个数
+		$(".trNodes").each(function(){
+			if($(this).find("input[type='checkbox']").attr("checked")=='checked'){
+				var xx = $(this).find("input[name='xx']").val();
+				var yy = $(this).find("input[name='yy']").val();
+				chans.push({
+					"title" : xx,
+					"chanid" : yy
+				});		
+			}else{
+					
+			}
+		});
+		if($(".trNodes").find("input[type='checkbox']:checked").length ==0){
+			window.top.sure_show("请选择需要添加的通道！");
+			return false;	
+		}
+		var params = {
+			"method":"add_nodes",
+			"sessionid":session,
+			"type":NodesLeixing,
+			"addr":NodesUrl,
+			"user":NodesUser,
+			"passw":password,
+			"chans":chans,
+			"pid":id
+		}	
+		$.post("/upapi",JSON.stringify(params),function(data){
+			if(data.retcode==0){
+				window.top.sure_show("添加成功！");
+				var treeNodes = window.top.getTreeNode();
+				if(treeNodes.length == 1) {
+					initData(treeNodes[0].id);
+				}
+				d.close();
+			}else{
+				window.top.sure_show("添加失败！");
+			}	
+		});	
+	}
+</script>	
+</head>
+
+<body>
+	<div class="alert-bg" style='padding-bottom:15px;'>
+        <form id="addNodes">
+            <table class="alert-table">
+            	<tbody class="tbody">
+                    <tr>
+                        <th><span class="red">*</span>节点类型：</th>
+                        <td>
+                            <select id="NodesLeixing" class="ipt-select  validate[required]">
+                                <option selected="selected">请选择节点类型</option>
+                            </select>
+                        </td>
+                        <th><span class="red">*</span>节点地址：</th>
+                        <td>
+                            <input type="text" class="ipt validate[required,custom[ipv4]]" id="NodesUrl"/>
+                        </td>
+                    </tr>
+                    <tr>
+                     	<th><span class="red">*</span>访问用户名：</th>
+                        <td>
+                             <input type="text" class="ipt validate[required,maxSize[16]]" id="NodesUser"/>
+                        </td> 
+                        <th><span class="red">*</span>访问密码：</th>
+                        <td>
+                             <input type="text" class="ipt validate[required,custom[notChinese],maxSize[16],minSize[3]]" id="password"/>
+                        </td>
+                    </tr>
+                    <tr class="search-tr">
+                        <th></th>
+                        <td colspan="3">
+                        	<span class="hr" id="chanid">查询通道信息</span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </form>
+    </div>
+</body>
+</html>

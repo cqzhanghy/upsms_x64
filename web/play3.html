@@ -1,0 +1,227 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>视频监控系统</title>
+<link href="css/core.css" rel="stylesheet" type="text/css"/>
+<script src="js/jquery-1.7.2.min.js" type="text/javascript"></script>
+<script type="text/javascript" src="dist/jquery.cookie.js"></script>
+<script src="js/uc-ui.js" type="text/javascript"></script>
+<script src="js/player.js" type="text/javascript"></script>
+<!--视频回放底部时间拖动控件-->
+<script src="js/playback/timeBar.js" type="text/javascript"></script>
+<script src="js/playback/playback.js" type="text/javascript"></script>
+<!-- end -->
+<script type="text/javascript">
+var session = $.cookie("sessionid");
+var type = "upsms";
+var user = window.top.$("#index-user").text();
+var passw = $.cookie("videopassw");
+var url = window.location.href;
+try{
+	url = url.substring(url.indexOf("://") + 3);
+	url = url.substring(0, url.indexOf("/"));
+} catch(e){};
+$("#video-show li").live("click",function(){
+	$(this).addClass("selected").siblings().removeClass("selected");	
+	num = $(this).index();
+});
+var addr = url;
+var type = "upsms";
+var chanid;
+var time;
+var stratTime; //定义视频开始回放时间
+//得到当前时间 时分秒
+var time = new Date();
+var time1 = time.getFullYear();
+var time2 = time.getMonth()+1;
+var time3 = time.getDate();
+var time4 = time.getHours() <10 ? ("0" + time.getHours()):time.getHours();
+var time5 = time.getMinutes() < 10 ? ("0" +time.getMinutes() ) : time.getMinutes();
+var time6 = time.getSeconds()< 10 ? ("0" +time.getSeconds() ) : time.getSeconds();
+stratTime = time1 + "-" + time2 + "-" + time3 + " " + time4 + ":" + time5 + ":" + time6;
+var speed; //播放速度
+var id;   //子id
+//动态得到视频回放录像
+/*点击左边树节点 右边用户得到列表数据*/
+//1.得到左边点击的id
+var treeds = window.top.getTreeNode();
+$(function(){
+	var params2 = {
+		"method":"get_version",
+		"sessionid": session	
+	} 	
+	$.post("/upapi",JSON.stringify(params2),function(data){
+		if(data.retcode == 0){
+			$("#version").val(data.version);
+		}	
+	});
+});
+window.top.registerFn(function(treeNode){
+	//显示版本号
+	
+	chanid = treeNode.id;
+	$(".video-titleShow").text(treeNode.title);
+	if($('.video-show2 object')!=null){
+		$('.video-show2').remove();
+		object = $('<div class="video-show2"><object name="upview" id="player" class="view-object player" type="application/x-upview-rcd" width="100%" height="100%">'+'</object></div>');
+		$('.list-max').append(object);
+	}
+	setRcdOpt($(".player")[0], type, addr, user, passw, chanid);
+	//设置回放
+}, window.top.types.TREE_NODE_CLICK);
+
+//视频回放函数
+function setRcdOpt(plugin, type, addr, user, passw, chanid){
+	plugin.SetRcdOpt(type, addr, user, passw, chanid);	
+	//定义开始播放时间
+	//plugin.StartPlay(stratTime);
+}
+
+//视频历史记录
+function history(){
+	$(window.top.document.getElementById("HistoryId")).empty();
+	var time1 = $(window.top.document.getElementById("startTime")).val();
+	var time2 = $(window.top.document.getElementById("endTime")).val();
+	if(time1==''){
+		alert('开始时间不能为空');
+		return ;
+	}
+	if(time2==''){
+		alert('结束时间不能为空');
+		return ;
+	}
+	if(time2<time1){
+		alert('结束时间必须大于开始时间');
+		return ;
+	}
+	var startTime = new Date(Date.parse(time1.replace(/-/g,   "/"))).getTime();     
+    var endTime = new Date(Date.parse(time2.replace(/-/g,   "/"))).getTime();     
+    var dates = Math.abs((startTime - endTime))/(1000*60*60*24); 
+	var eTime,sTime;	
+	if(dates>7){
+		alert('时间跨度不能大于一周');
+		return;
+	}
+	if($("#version").val()>='1.0.35'){
+		var params = {
+			"method":"query_node_rcd",
+			'sessionid':session,
+			"id":chanid,
+			's_time':time1,
+			'e_time':time2
+		}
+		$.post("/upapi",JSON.stringify(params),function(data){
+			if(data.rcds.length>0){
+				for(var i =0; i< data.rcds.length; i++){
+					eTime = data.rcds[i].e_time;
+					sTime = data.rcds[i].s_time;	
+					var lii = $('<li>'+'<span class="sTime">'+sTime+'</span>'+'-'+eTime+'</li>');
+					$(window.top.document.getElementById("HistoryId")).append(lii);	
+					}
+			}else{
+					alert("该时间段没有视频!");
+				}
+			}
+	)
+	}else{
+		var d = $(".player")[0].Query(time1,time2);	
+		var rcds = $.parseJSON(d).rcds;
+		if(rcds==""){
+				alert("该时间段没有视频!");
+		}else{
+			for(var i =0; i<rcds.length; i++){
+				eTime =rcds[i].e_time;
+				sTime =rcds[i].s_time;	
+				var lii = $('<li>'+'<span class="sTime">'+sTime+'</span>'+'-'+eTime+'</li>');
+				$(window.top.document.getElementById("HistoryId")).append(lii);	
+			}
+		}
+	}
+		
+	//将得到的值append到父级页面下
+	
+}
+//父层 查询时间
+$(window.top.document.getElementById("searchHistory")).live("click",function(){
+	history();
+});
+//父层点击历史记录开始回放视频
+$(window.top.document.getElementById("HistoryId")).find("li").live("click",function(){
+	$(this).addClass("selected").siblings().removeClass("selected");
+	var ssTime = $(this).find(".sTime").text();
+	$('#playbackbar').setTime(ssTime);	
+	$(".player")[0].SetPlayTime(ssTime);	
+	/*$('#playbackbar').initViedoBack({ 
+		timeBarId : 'timebar2',
+		timeChange:function(c){
+			$(".player")[0].SetPlayTime(c);	
+		}
+	});	*/
+});
+
+
+//生成视频
+$(function(){
+	//定时播放时间拖动控件
+	/*$(".player").each(function(){
+		setRcdOpt($(this)[0], type, addr, user, passw, chanid);
+	});*/
+
+	$('#playbackbar').initViedoBack({ 
+		timeBarId : 'timebar2',
+		timeChange:function(c){
+			$(".player")[0].SetPlayTime(c);	
+		}
+	});
+	$('#playbackbar').setTime(stratTime);	
+});
+//定义播放的快慢
+$(".play-btn span[name='play']").live("click",function(){
+	speed = $(this).attr("value");
+	$(".player")[0].SetSpeed(speed);
+});
+
+//定义播放和暂停
+var curTime = "";
+$(".play").live("click",function(){
+	$(".play").addClass("play2");
+	curTime = $(".player")[0].GetOsdTime();
+	$(".player")[0].StopPlay();
+	$(".play").attr("title","播放");
+	//history();不刷新录像回收时间列表
+});
+$(".play2").live("click",function(){
+	$(".play").removeClass("play2");
+	$(".player")[0].StartPlay(curTime);
+	$(".play").attr("title","暂停");
+});
+</script>
+<script type='text/javascript' for=timebar2 event='GetMovePlaybackTime(szGetTime)'>
+	$('#playbackbar').setMouseUpCallback(szGetTime);
+</script>
+<style type="text/css">
+	span{ cursor:pointer;}
+</style>
+</head>
+<body>
+	<div class="list-max">
+    	<div class="video-titleShow"></div>
+        <div class="video-show2">
+        	<object name="upview" id="player" class="view-object player" type="application/x-upview-rcd" width="100%" height="100%"></object>
+        </div>
+        <div class="video-oprate2">
+        	<div class="play-btn">
+                <span id="play" class="play" title="暂停"></span>
+                <span id="play-slow4" name="play" value="0.25" title="4倍慢放"></span>
+                <span id="play-slow2" name="play" value="0.5" title="2倍慢放"></span>
+                <span id="playNew" name="play" value="1" title="正常播放"></span>
+                <span id="play-kuickly2" name="play" value="2" title="2倍快放"></span>
+                <span id="play-kuickly4" name="play" value="4" title="4倍快放"></span>
+				<span><input id="version" type="text" style="display:none"/></span>
+            </div>
+            <div id="playbackbar" style="position:absolute; left:0; right:0; bottom:0px; height:60px; background:#000;"></div>
+        </div>
+    </div>
+</body>
+</html>

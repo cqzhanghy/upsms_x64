@@ -1,0 +1,393 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>资源共享</title>
+<link href="css/core.css" rel="stylesheet" type="text/css"/>
+<script src="js/jquery-1.7.2.min.js" type="text/javascript"></script>
+<script type="text/javascript" src="dist/jquery.cookie.js"></script>
+<script type="text/javascript" src="js/jquery.md5.js"></script>
+<script src="js/uc-ui.js" type="text/javascript"></script>
+<!-- 验证框架 -->
+<script type="text/javascript" src="validationengine/js/languages/jquery.validationEngine-zh_CN.js"></script>
+<script type="text/javascript" src="validationengine/js/jquery.validationEngine.js"></script>
+<link rel="stylesheet" type="text/css" href="validationengine/css/validationEngine.jquery.css" media="screen" />
+<!-- 验证框架end -->
+<script type="text/javascript">
+	var session = $.cookie("sessionid");  //验证session是否过期
+	//验证信息
+	$(function(){
+		$("#shareDiv").hide();
+		//验证
+		$("#addShare").validationEngine({
+			inlineValidation: false, //提交表单时验证 
+			success : false,         //false表示全部通过验证了才能提交表单，true表示随时都可以提交表单
+			promptPosition : "centerRight"	
+		});	
+		get_Noshare();	
+		inte();
+	});	
+	//配置联级信息
+	function add_gl(){
+		if(!$("#addShare").validationEngine("validate")){
+			return;	
+		}	
+		//1.得到值
+		var gl = $("input[name='yes']:checked").val(); 
+		var pass = $("input[name='yes2']:checked").val();
+		var user = $("#user").val();
+		var password = $("#password").val();
+		var address = $("#address").val();	
+		var params = {
+			"sessionid":session,
+			"method":"set_cascade_cfg",
+			"addr":address,
+			"user":user,
+			"passw":password,
+			"is_encrypted":pass== "true" ? true : false,
+			"is_enable":gl == "true" ? true : false
+		}
+		$.post("/upapi",JSON.stringify(params),function(data){
+			window.top.validateSession(data);
+			if(data.retcode == 0){
+				window.top.sure_show("配置成功!");
+				inte();	
+			}else{
+				window.top.sure_show("配置失败!");	
+				inte();	
+			}	
+		});
+	}
+	//获取联级信息
+	function inte(){
+		var params = {
+			"sessionid":session,
+			"method":"get_cascade_cfg"
+		}
+		$.post("/upapi",JSON.stringify(params),function(data){
+			window.top.validateSession(data);
+			if(data.retcode == 0){
+				$("#user").val(data.user);
+				$("#password").val(data.passw);
+				$("#address").val(data.addr);
+				var is_enable = data.is_enable;
+				var is_encrypted = data.is_encrypted;
+				$("input[name='yes'][value='"+is_enable+"']").attr("checked",true);	
+				$("input[name='yes2'][value='"+is_encrypted+"']").attr("checked",true);	
+				//当不关联的时候，下面的内容不显示					
+				if(is_enable==false){
+					//未配置联机信息 提示配置联机信
+					$("#shareDiv").hide();
+				}else{
+					$(".two-ipt").addClass("readonly");
+					//$(".two-ipt").attr("readonly","readonly");
+					$("#shareDiv").show();		
+				}
+			}else{
+				//alert("false");	
+			}
+		});	
+	}
+
+	//联级配置信息
+	$("#btn-preserve").live("click",function(){
+		add_gl();	
+	});
+	//共享
+	function Share(){
+		//得到ids
+		var ids = [];
+		var ceck = $("#no-show tr").find(":checkbox[checked='checked']");
+		if(ceck.length == 0){
+			alert("请选择需要共享的资源节点！");	
+			return false;
+		}
+		//得到已共享资源
+		var num = [];
+		var cek2 = $("#yes-show tr").find(":checkbox");
+		cek2.each(function(i,v){
+			var id2 = $(v).parent().parent().find("td[name='id']").attr("id");
+			num.push(id2);	
+		});
+		ceck.each(function(i,v){
+			var idd = $(v).parent().parent().find("td[name='id']").attr("id");
+			ids.push(idd);		
+		});	
+		//将数组num里面的值加到数据ids里面去
+		for(var i=0;i<num.length;i++){
+			ids.push(num[i]);	
+		}
+		var params = {
+			"method":"set_shared_node",
+			"sessionid":session,
+			"ids":ids	
+		}
+		$.post("/upapi",JSON.stringify(params),function(data){
+			window.top.validateSession(data);
+			if(data.retcode == 0){
+				window.top.sure_show("共享成功!");
+				get_Noshare();
+			}else{
+				window.top.sure_show("共享失败!");	
+			}	
+		});		
+	}
+	$("#share").live("click",function(){
+		Share();	
+	});
+	function yes_shared(){
+		$("#shareDiv").show();	
+	}
+	function no_shared(){
+		$("#shareDiv").hide();	
+	}
+	//取消共享
+	function cancle_Share(){
+		//得到已共享所有资源
+		var num = [];
+		var cek2 = $("#yes-show tr").find(":checkbox");
+		cek2.each(function(i,v){
+			var id2 = $(v).parent().parent().find("td[name='id']").attr("id");
+			num.push(id2);	
+		});
+		var ids = [];
+		var ceck = $("#yes-show tr").find(":checkbox[checked='checked']");
+		if(ceck.length == 0){
+			alert("请选择要取消共享的资源！");
+			return false;
+		}
+		ceck.each(function(i,v){
+			var idd = $(v).parent().parent().find("td[name='id']").attr("id");
+			ids.push(idd);		
+		});		
+		//删除元素
+		for (var j=0; j<ids.length; j++) {
+			for( var i=0; i<num.length;i++){
+				if (num[i] == ids[j]) {
+					num.splice(i, 1);
+					break;
+				}
+			}
+		}	
+		var params = {
+			"method":"set_shared_node",
+			"sessionid":session,
+			"ids":num
+		}
+		$.post("/upapi",JSON.stringify(params),function(data){
+			window.top.validateSession(data);
+			if(data.retcode == 0){
+				window.top.sure_show("取消共享成功!");
+				get_Noshare();
+			}else{
+				window.top.sure_show("取消共享失败!");	
+			}	
+		});		
+	}
+	$("#cancle").live("click",function(){
+		cancle_Share();	
+	});
+	//得到未共享资源
+	function get_Noshare(){
+		//得到未关联的资源节点
+		var params2 = {
+			"method":"get_all_node",
+			"sessionid":session
+		};
+		$.post("/upapi",JSON.stringify(params2),function(data){
+			window.top.validateSession(data);
+			if(data.retcode == 0){
+				var nodes = data.node;
+				$("#no-show").empty();
+				$("#yes-show").empty();
+				var m = 1;
+				var n = 1;
+				for( var i = 0; i < nodes.length;i++){
+					if(nodes[i].is_shared == false){
+						var tr = $("<tr>"
+									+"<td width='35'>"+"<input type='checkbox'>"+"</td>"	
+									+"<td width='35'>"+m+++"</td>"	
+									+'<td name="id" id="'+nodes[i].id+'">'+nodes[i].title+'</td>'
+									+"<td>"+nodes[i].type+"</td>"	
+									+"<td>"+nodes[i].user+"</td>"	
+									+"<td>"+nodes[i].addr+"</td>"
+						+"</tr>");	
+						$("#no-show").append(tr);
+						lock_tab();
+					}else if(nodes[i].is_shared == true){
+						var tr = $("<tr>"
+									+"<td width='35'>"+"<input type='checkbox'>"+"</td>"	
+									+"<td width='35'>"+n+++"</td>"	
+									+'<td name="id" id="'+nodes[i].id+'">'+nodes[i].title+'</td>'
+									+"<td>"+nodes[i].type+"</td>"	
+									+"<td>"+nodes[i].user+"</td>"	
+									+"<td>"+nodes[i].addr+"</td>"
+						+"</tr>");	
+						$("#yes-show").append(tr);
+						lock_tab();
+					}		
+				}
+			}
+			else{
+				window.top.sure_show("操作失败!");
+			}
+		});
+	}
+</script>
+</head>
+
+<body>
+	<div class="list-max">
+        <div class="list-content list-content-all" style="bottom:0;">
+        	<div class="list-content-title">
+            	<span class="list-title-img"></span><span class="title">资源共享</span>
+            </div>
+        	<div class="content">
+            	<!--内容分块区域 可以收折-->
+            	<div class="list-crimp">
+                	<div class="crimp-top">联网级联配置<span class="crimp-top-title"><span class="txt">隐藏</span><strong></strong></span></div>
+                	<div class="crimp-content">
+                        <div class="crimp-content-margin">
+                        	<form id="addShare">
+                                <table class="two-table">
+                                    <tr>
+                                        <th><span class="red">*</span>是否共享：</th>
+                                        <td>
+                                           <input type="radio" id="radio-yes" name="yes" value="true" class="validate[required]" onclick="yes_shared()"/><label for="radio-yes">是</label>
+                                           <input type="radio" id="radio-no" name="yes" value="false" class="validate[required]" onclick="no_shared()"/><label for="radio-no">否</label>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th><span class="red">*</span>是否加密 ：</th>
+                                        <td>
+                                            <input type="radio" id="radio-mi" name="yes2" value="true" class="validate[required]"/><label for="radio-mi">是</label>
+                                            <input type="radio" id="radio-mi2" name="yes2" value="false" class="validate[required]"/><label for="radio-mi2">否</label>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th><span class="red">*</span>上级地址：</th>
+                                        <td><input type="text" class="two-ipt validate[required,maxSize[32]],custom[ipv5]]" id="address"/></td>
+                                        <th></th>
+                                        <td></td>
+                                    </tr>
+                                    <tr>
+                                        <th><span class="red">*</span>用户名：</th>
+                                        <td>
+                                            <input type="text" class="two-ipt validate[required,maxSize[16]],minSize[3]" id="user"/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th><span class="red">*</span>密码：</th>
+                                        <td>
+                                            <input type="password" class="two-ipt validate[required,maxSize[16],minSize[3]]" id="password"/>
+                                        </td>
+                                    </tr>
+                                    
+                                    <tr>
+                                    	<th></th>
+                                        <td>
+                                        	<span class="btn btn-preserve" id="btn-preserve" style="margin-left:0;"><span class="btn-img"></span><span class="btn-title">保存</span></span>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </form>
+                		</div>
+                	</div>
+                </div>
+                <!--end-->
+                <!--内容分块区域 可以收折-->
+            	<div class="list-crimp" id="shareDiv">
+                	<!--<div class="crimp-top">资源共享<span class="crimp-top-title"><span class="txt">隐藏</span><strong></strong></span></div>-->
+                	<div class="crimp-content">
+                        <div class="crimp-content-margin" style="height:300px;">
+                            
+                            <!--共享左侧列表区域-->
+                            <div class="list-max-div list-max-div2">      
+                                <!--  列表显示 -->
+                                <div class="list-list">
+                                    <!--  列表操作栏区域  -->
+                                    <div class="list-nav">
+                                        <span class="panelbar-title">未共享资源</span>
+                                    </div>
+                                    <!--数据列表区域-->
+                                    <div class="grid">
+                                        <div class="grid-header">
+                                            <div class="grid-tab-thead-father">
+                                            
+                                                <table class="grid-list">
+                                                    <tr>
+                                                        <th width="35"><input type="checkbox"/></th>
+                                                        <th width="35">序号</th>
+                                                        <th>名称</th>
+                                                        <th>类型</th>
+                                                        <th>用户</th>
+                                                        <th>ip地址</th>
+                                                    </tr>
+                                                </table>
+                                            </div>
+                                        </div>
+                                        <div class="grid-tbody">
+                                            <div class="grid-tab-tbody-father">
+                                                <table class="grid-list" id="no-show">
+                                                
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- 列表end  -->
+                                </div>
+                            </div>
+                            
+                            <!--共享按钮显示区域-->
+                          <div class="ziyuan-show">
+                                <div class="ziyuan-show-cont">
+                                    <span class="ziyuan-left" title="共享" id="share">共享<img src="img/arrow-right.png" width="24" height="24" /></span>
+                                    <span class="ziyuan-right" title="取消" id="cancle">取消<img src="img/arrow-left.png" width="24" height="24" /></span>
+                              </div>
+                          </div>
+                            
+                            <!--共享右侧列表区域-->
+                            <div class="list-max-div list-max-div3">      
+                                <!--  列表显示 -->
+                                <div class="list-list">
+                                    <!--  列表操作栏区域  -->
+                                    <div class="list-nav">
+                                        <span class="panelbar-title">已共享资源</span>
+                                    </div>
+                                    <!--数据列表区域-->
+                                    <div class="grid">
+                                        <div class="grid-header">
+                                            <div class="grid-tab-thead-father">
+                                                <table class="grid-list">
+                                                    <tr>
+                                                        <th width="35"><input type="checkbox"/></th>
+                                                        <th width="35">序号</th>
+                                                        <th>名称</th>
+                                                        <th>类型</th>
+                                                        <th>用户</th>
+                                                        <th>ip地址</th>
+                                                    </tr>
+                                                </table>
+                                            </div>
+                                        </div>
+                                        <div class="grid-tbody">
+                                            <div class="grid-tab-tbody-father">
+                                                <table class="grid-list" id="yes-show">
+                                                	
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- 列表end  -->
+                                </div>
+                            </div>
+                            <!--  共享列表end  -->
+                		</div>
+                	</div>
+                </div>
+                <!--end-->
+            </div>
+        </div>
+    </div>
+</body>
+</html>

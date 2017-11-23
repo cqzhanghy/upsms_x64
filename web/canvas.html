@@ -1,0 +1,48 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>视频监控系统</title>
+<link href="css/core.css" rel="stylesheet" type="text/css"/>
+<script src="js/jquery-1.7.2.min.js" type="text/javascript"></script>
+<script type="text/javascript" src="dist/jquery.cookie.js"></script>
+<script src="js/uc-ui.js" type="text/javascript"></script>
+<script src="js/player.js" type="text/javascript"></script>
+<script src="js/upview.js" type="text/javascript"></script>
+<script type="text/javascript">
+//计算canvas的宽度、高度
+$(function(){
+	var width = $(".index-iframe").width();
+	var height = $(".index-iframe").height();	
+	$(".player").css({"width":width,"height":height});
+	var canvas = $("canvas")[0];
+	
+});
+function startPlay(plugin, chanid, url, user, passw, stype) {
+	try {
+		//var plugin = document.getElementById(pluginid)
+//		_objplay(plugin, type, addr, user, passw, "7f986429-648b-4a45-abe3-d0cd79409669", true);
+		//_objplay(plugin, type, addr, user, passw, chanid, true);
+		var opt= {};
+		opt.id = chanid; 
+		opt.url = url;  
+		opt.canvas = $("canvas")[0]; 
+		opt.user = user;
+		opt.passw = passw; 
+		opt.stype = "main";
+		plugin.wsavc1 = new UpViewPlayer(opt);
+	} catch (e) {
+		//alert(e.message);
+	}
+}
+</script>
+<style type="text/css">
+	html,body{ height:100%; width:100%;}
+</style>
+</head>
+<body>
+	<div class="index-iframe">
+		<canvas name='upview' class='view-object player' type='application/x-upview' width="100%" height="100%"></canvas>	
+    </div>
+</body>
+</html>

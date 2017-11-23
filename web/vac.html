@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<link type="text/css" rel="stylesheet" href="css/base.css"/>
+<title></title>
+</head>
+
+<body>
+	<div id="container">
+		<div id="header"></div>
+		<div id="pagebody">
+			<div id="sideleft">
+				<div id="channel_list" style="width:100%; height:60%; overflow-y:auto;overflow-x:auto;">
+				</div>
+				<div id="record_list" style="width:100%; height:40%;">
+					<div style="width:100%; height:10%;">
+						&nbsp&nbsp<input type="text" id="date_time" class="date" value="2014-09-01" />&nbsp&nbsp
+						<input type="button" value="查询" onclick="javascript:onEnumRcd();"/>
+						<br/>
+					</div>
+					<div style="width:100%; height:90%;">
+						<table id="tbl_head" align="center" border="0" style="width:100%; height:100%; background-color: #fff">
+		                    <tr><th width="30%">开始时间</th>
+		                        <th width="30%">结束时间</th>
+		                        <th width="30%">操作</th>
+		                    </tr>
+		                    <tr>
+		                        <td colspan="3" valign="top" height=100%>
+		                            <div style="width:100%; height:200px; overflow-y:scroll;">
+		                                <table id="tbl_rcdlist" border="0" width="100%" align="center" bgcolor="#f0f6e4"></table>
+		                            </div>
+		                        </td>
+		                    </tr>
+						</table>
+					</div>
+
+				</div>
+			</div>
+			<div id="sideright">
+				<div id="show_main" style="width:85%; height:100%; float:left;"></div>
+				<div id="show_moveobj" style="width:15%; height:100%; float:right; background:#fff;">
+					<div id="moveobj_0" style='width:90%; height:12%; padding-left:5%; padding-top:2px;'></div>
+					<div id="moveobj_1" style='width:90%; height:12%; padding-left:5%; padding-top:2px;'></div>
+					<div id="moveobj_2" style='width:90%; height:12%; padding-left:5%; padding-top:2px;'></div>
+					<div id="moveobj_3" style='width:90%; height:12%; padding-left:5%; padding-top:2px;'></div>
+					<div id="moveobj_4" style='width:90%; height:12%; padding-left:5%; padding-top:2px;'></div>
+					<div id="moveobj_5" style='width:90%; height:12%; padding-left:5%; padding-top:2px;'></div>
+					<div id="moveobj_6" style='width:90%; height:12%; padding-left:5%; padding-top:2px;'></div>
+					<div id="moveobj_7" style='width:90%; height:12%; padding-left:5%; padding-top:2px;'></div>
+				</div>
+			</div>
+		</div>
+		<div id="footer"></div>
+	</div>
+	
+	<iframe id="move_erea" src='' scrolling='no' frameborder=0></iframe>
+	
+	<!--script type="text/javascript" src="js/prototype.js"></script-->
+	<script type="text/javascript" src="lib/jquery-1.7.2.min.js"></script>
+	<script type="text/javascript" src="js/app.js"></script>
+	<script type="text/javascript" src="lib/jquery.jSelectDate.js"></script>
+	<script type="text/javascript" src="lib/base64.js"></script>
+	<script type="text/javascript">
+
+		var jQuery=$;
+		jQuery(document).ready(function(){
+			var xmlHttp = App.ajax.createReqObj();
+			App.ajax.sendReqGet(xmlHttp, "/nodes", function(r) {
+				$("#channel_list").empty();
+				for (var i=0; i<r.nodes.length; i++) {	
+					$("#channel_list").append("<div style='padding-left:5%; padding-top:5%;'><a id='node_"+i+"' href=\"javascript:onSelectNode('"+i+"', '"+r.nodes[i].url+"');\" ondblclick=\"onPlayReal('"+r.nodes[i].url+"');\">"+r.nodes[i].title+"</a></div>");
+				}
+			});
+			
+			$("input.date").jSelectDate({
+				css:"date",
+				yearBeign: 2000,
+				disabled : false
+			});
+		});
+		
+		var curNode;
+		var onSelectNode = function(n, uri) {
+			//alert(uri);
+			$("#channel_list a").css("color", "#333");
+			$("#node_"+n).css("color", "red");
+			curNode = uri;
+			$("#tbl_rcdlist").empty();
+		}
+		
+		var onPlayReal = function(uri) {
+			var url = uri + "/live/flv";
+			//var w = $("#show_live").css("width");
+			//var h = $("#show_live").css("height");
+			//alert(w +" || "+ h);
+			//$("#iframe_flv").attr("src", "flv_frame.html?id="+url+"&w="+w+"&h="+h);
+			window.open("flv_frame.html?id="+url+"&w=704&h=576", "", "width=709,height=581,menubar=no,scrollbars=no,status=no,titlebar=no,toolbar=no,location=no");
+
+		}
+		
+		function ParseDT(tm) {
+			var dt = tm.split(" ");
+			var d = dt[0].split("-");
+			var hour = 0;
+			var minute = 0;
+			var second = 0;
+			if (2==dt.length) {
+				hm = dt[1].split(":");
+				hour = hm[0];
+				minute = hm[1];
+				second = hm[2];
+			}
+			
+		    return [d[0], d[1], d[2], hour, minute, second];
+		}
+		
+		function formatDT(d) {
+			var s = d[0];
+			if (d[1].length<2)
+				s += "0" + d[1]
+			else
+				s += d[1];
+			
+			if (d[2].length<2)
+				s += "0" + d[2] + "T"
+			else
+				s += d[2] + "T";
+			
+			if (d[3].length<2)
+				s += "0" + d[3]
+			else
+				s += d[3];
+			
+			if (d[4].length<2)
+				s += "0" + d[4]
+			else
+				s += d[4];
+			
+			if (d[5].length<2)
+				s += "0" + d[5]
+			else
+				s += d[5];
+			
+			return s;
+		}
+		
+		var onEnumRcd = function() {
+			if (undefined==curNode || null==curNode) {
+				alert("请先选中你要查询的通道！");
+				return false;
+			}
+			
+			var s = $("#date_time").val();
+			var t = ParseDT(s);
+			var st = formatDT(t);
+			t[3] = "23";
+			t[4] = "59";
+			t[5] = "59";
+			var et = formatDT(t);
+			
+			var url = curNode + "/rcd/query?stime=" + st +"&etime=" + et;
+		    var xmlHttp = App.ajax.createReqObj();
+		    App.ajax.sendReqGet(xmlHttp, url, function(r){
+		        $("#tbl_rcdlist").empty();
+		        var html="";
+		        for (var i=0; i<r.rcds.length; i++) {
+		        	html += "<tr>"
+            	 	+ "<td style='width:35%;'>"+r.rcds[i].stime+"</td>"
+            	 	+ "<td style='width:35%;'>"+r.rcds[i].etime+"</td>"
+            	 	+ "<td style='width:30%;'><input type='button' value='分析' onclick=\"onAnalyze('"+r.rcds[i].stime+"','"+r.rcds[i].etime+"');\">"
+            	 	+ "&nbsp<input type='button' value='点播' onclick=\"onReplay('"+curNode+"','"+r.rcds[i].stime+"','"+r.rcds[i].etime+"');\"></td>";
+            		"</tr>";
+		        }
+		        $("#tbl_rcdlist").append(html);
+		        $("tbl_rcdlist>tr:odd").addClass("odd");
+		        $("tbl_rcdlist>tr:even").addClass("even");
+		    });
+		}
+
+		var mobjs = new Array();
+		var b64 = new Base64();
+		var lastImg = new Date();
+		function rcvPics(n, t) {
+			var r = $.parseJSON(b64.decode(t));
+			
+			var curImg = new Date();
+			//if (curImg.getTime()-lastImg.getTime() > 5*1000) {
+				//lastImg = curImg;
+				var pic = new Image();
+				pic.src = r.img;
+				pic.onload = function() {
+					if (curImg.getTime()-lastImg.getTime() > 1*1000) {
+						lastImg = curImg;
+					var html = "<img href='' src='"+pic.src+"' style='width:100%; height:100%;' />"
+					$("#show_main").empty();
+					$("#show_main").append(html);
+					}
+				}
+			//}
+			
+			if (mobjs.length>=8) {
+				mobjs.shift();
+			}
+			
+			var tmp = $("#moveobj_0").css("width").split("p");
+			var imgW = Number(tmp[0]);
+			tmp = $("#moveobj_0").css("height").split("p");
+			var imgH = Number(tmp[0]);
+			var img = new Image();
+			img.src = r.obj;
+			img.onload = function() {
+			    imgW = img.width<imgW ? img.width : imgW;
+			    imgH = img.height<imgH ? img.height : imgH;
+			    
+				mobjs.push("<a herf='#' title='"+r.time+"'><img href='' src='"+r.obj+"' style='width:"+imgW+"px; height:"+imgH+"px;' alt='"+r.time+"' onclick=\"onReplay('"+n+"', '"+r.time+"');\" /></a>");
+				for (var i=0; i<mobjs.length; i++) {
+					//html += mobjs[i];
+					
+					$("#moveobj_"+i).empty();
+					$("#moveobj_"+i).append(mobjs[i]);
+				}
+				
+				//html = "<div style='width:90%; height:12%; padding-left:5%; padding-top:2px;'><img href='' src='"+r.obj+"' style='width:100%; height:100%;' /></div>";
+				//$("#show_moveobj").empty();
+				//$("#show_moveobj").append(html);
+			}
+		}
+
+		var onAnalyze = function(s, e){
+			//alert(s +" | " + e);
+			if (undefined==curNode || null==curNode) {
+				alert("请先选中你要查询的通道！");
+				return false;
+			}
+
+			var st = formatDT(ParseDT(s));
+			var et = formatDT(ParseDT(e));
+			var url = curNode + "/rcd/vca?" + "time=" + st + "_" + et;
+			$("#move_erea").attr("src", "comet_frame.html?id="+url+"&node="+curNode);
+		}
+		
+		var onReplay = function(n, s, e){
+			//alert(s +" | " + e);
+
+			var tmp = ParseDT(s);
+			var st = formatDT(tmp);
+			var et;
+			if (undefined!=e && null!=e) {
+				et = formatDT(ParseDT(e));
+			} else {
+				var sd = new Date(tmp[0], tmp[1], tmp[2], tmp[3], tmp[4], tmp[5]);
+				var ed = new Date(sd.setMinutes(Number(tmp[4]) + 5));
+				
+				tmp[0] = ed.getFullYear().toString();
+				tmp[1] = ed.getMonth().toString();
+				tmp[2] = ed.getDate().toString();
+				tmp[3] = ed.getHours().toString();
+				tmp[4] = ed.getMinutes().toString();
+				tmp[5] = ed.getSeconds().toString();
+				et = formatDT(tmp);
+				//alert(et);
+			}
+			
+			var url = n + "/rcd/flv?" + "time=" + st + "_" + et;
+			window.open("flv_frame.html?id="+url+"&w=704&h=576", "", "width=709,height=581,menubar=no,scrollbars=no,status=no,titlebar=no,toolbar=no,location=no");
+		}
+		
+	</script>
+	
+</body>
+</html>
+

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>live</title>
+</head>
+<body>
+
+<div id="player_erea"></div>
+
+<script type="text/javascript" src="js/swfobject.js"></script>
+<script type="text/javascript"> 
+	function GetQueryString(name) {
+	   var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)","i");
+	   var r = window.location.search.substr(1).match(reg);
+	   if (r!=null) return (r[2]); return null;
+	}
+	var fid = GetQueryString("id");
+	var w = GetQueryString("w") || 505;
+	var h = GetQueryString("h") || 405;
+	var showBar = GetQueryString("showbar");
+	if (null==showBar) 
+		showBar = 0;
+
+	//alert(fid + "|"+ w + "|"+ h);
+	
+  var flashvars = 
+      {
+		  'vcastr_file' : 		fid,
+		  //'vcastr_file' : 	'http://192.168.10.60:8080/web_test/movies/b.flv' //经测试Flvplayer，必须要全路径
+		  'IsAutoPlay' : 		1,
+		  'IsContinue' : 		0,
+		  'IsShowBar' : 		showBar,
+		  'BufferTime' : 		0.5
+      }; 
+
+      var params = 
+      {
+        'allowfullscreen':      'true', 
+        //'allowscriptaccess':    'always', 
+        'bgcolor':              '#000000',
+        'quality':				'high'
+      }; 
+
+      var attributes = 
+      { 
+        'align':                'top', 
+        'name':                 'playerID', 
+        'id':                   'playerID' 
+      }; 
+
+      swfobject.embedSWF('flash/Flvplayer.swf', 'player_erea', w, h, '9.0.124', 'flash/expressInstall.swf', flashvars, params, attributes); 
+</script>
+</body>
+</html>

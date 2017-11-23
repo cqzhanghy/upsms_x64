@@ -1,0 +1,297 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>视频融合服务系统</title>
+<script src="js/jquery-1.7.2.min.js" type="text/javascript"></script>
+<script type="text/javascript" src="dist/jquery.cookie.js"></script>
+<script src="js/uc-ui.js" type="text/javascript"></script>
+<script src="js/json2.js" type="text/javascript"></script>
+<script type="text/javascript" src="js/simplePagination/jquery.simplePagination.js"></script>
+<link href="js/simplePagination/simplePagination.css" rel="stylesheet" type="text/css"/>
+<link href="css/core.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript">
+	var session = $.cookie("sessionid");
+	var nodes = [];
+	var updateId = "";
+	var d = null;
+	var idd =[];
+	/*得到用户列表数据*/
+	function getNodeById(id) {
+		for (var i=0;i<nodes.length;i++) {
+			if (nodes[i].id == id) {
+				return nodes[i];
+			}
+		}
+	}	
+	window.top.registerFn(function(treeNode){
+		initData(treeNode.id);
+	}, window.top.types.TREE_NODE_CLICK);
+	//初始页面赋值
+	$(function(){
+		var treeNodes = window.top.getTreeNode();
+		if (treeNodes.length == 1) {
+			initData(treeNodes[0].id);
+		}
+	});
+	function initData(id) {
+		var params = {
+			"method" : "get_node",
+			"sessionid" : session,
+			"id" : id
+		};
+		$.post("/upapi",JSON.stringify(params),function(data){
+			nodes = data.node;
+			setList(nodes);
+			lock_tab();
+		});
+	}
+	
+	/*列表显示*/
+	function setList(nodes) {
+		$("#list-show").empty();
+		//去掉全选
+		$(".grid-header .grid-list :checkbox").prop("checked",false);	
+		for (var i=0;i<nodes.length;i++) {
+			var trr = $('<tr>'
+					+'<td width="40">'+(i+1)+'</td>'
+					+'<td width="35"><input type="checkbox"/></td>'
+					+'<td name="id" width="230">'+nodes[i].id+'</td>'
+					+'<td name="title" id="'+nodes[i].id+'">'+nodes[i].title+'</td>'
+					+'<td name="addr">'+nodes[i].addr+'</td>'
+					+'<td name="user">'+nodes[i].user+'</td>'
+					+'<td name="passw">'+nodes[i].passw+'</td>'
+					+'<td name="chanid">'+nodes[i].chanid+'</td>'
+					+'<td name="chanid">'+(nodes[i].is_online == 0 ? "离线" : "在线")+'</td>'
+				+'</tr>');	
+			$("#list-show").append(trr);
+		}
+	}
+	//新增资源节点	
+	$("#addZiyuan").live("click",function(){
+		addNode();
+	});
+	//新增资源节点	
+	$("#addZiyuans").live("click",function(){
+		addNodes();
+	});
+	//删除
+	$("#delete-password").live("click",function(){
+		dele_Nodes();	
+	});
+	function addNode(){
+		var treeNodes = window.top.getTreeNode();
+		if (treeNodes.length != 1) {
+			alert("请选择一个节点！");
+			return;
+		}
+		var id = treeNodes[0].id;
+		var d = null;
+		var dia_log = {
+			"width":"700",	
+			"height":"300",
+			"title":"增加资源节点",
+			"url":"ziyuan-add.html", 
+			save:function(){
+				d.iframe.contentWindow.addZiyuanNodes(d, id, initData);
+			}	
+		}
+		d = dialog(dia_log);		
+	}
+	function addNodes(){
+		var treeNodes = window.top.getTreeNode();
+		if (treeNodes.length != 1) {
+			alert("请选择一个节点！");
+			return;
+		}
+		var id = treeNodes[0].id;
+		var d = null;
+		var dia_log = {
+			"width":"800",	
+			"height":"450",
+			"title":"增加资源节点",
+			"url":"ziyuan-adds.html", 
+			save:function(){
+				d.iframe.contentWindow.addZiyuanNodess(d, id, initData);
+			}	
+		}
+		d = dialog(dia_log);		
+	}
+	/*删除资源节点*/
+	function dele_Nodes(){
+		//1.选中
+		var nodesDel=[];
+		var ceck = $("#list-show").find("tr").find(":checkbox[checked='checked']");
+		ceck.each(function(index,ele){
+					var id =$(this).parent().parent().find("td[name='title']").attr('id');
+					updateId = id;
+					nodesDel.push(id);	
+				})
+				console.log(ceck.length);
+		if(ceck.length == 0){
+			window.top.sure_show("请选择一条数据！");
+			return;	
+		}
+		var dia_log = {
+			"width":300,
+			"height":150,
+			"title":"删除资源节点"	,
+			"url":"ziyuan-delete.html",
+			save:function(){
+				d.iframe.contentWindow.deleteNodes(d,nodesDel, initData);
+			}
+			
+				
+		}
+		d = dialog(dia_log);
+	}
+	/*修改节点*/
+	$("#reset").live("click",function(){
+		rest_Nodes();	
+	});
+	function rest_Nodes(){
+		//1.选中
+		var ceck = $("#list-show").find("tr").find(":checkbox[checked='checked']");
+		if(ceck.length == 0){
+			window.top.sure_show("请选择需要修改的资源节点");
+			return false;	
+		}
+		if(ceck.length > 1){
+			window.top.sure_show("一次只能修改一个节点信息");
+			return false;	
+		}
+		var id = ceck.parent().parent().find("td[name='title']").attr("id");
+		updateId = id;
+		var dia_log = {
+			"width":700,
+			"height":300,
+			"title":"修改资源节点"	,
+			"url":"ziyuan-reset.html",
+			save:function(){
+				d.iframe.contentWindow.resetNodes(d, getNodeById(id), initData);			
+			}			
+		}
+		d = dialog(dia_log);
+	}
+	/*关联信息*/
+	$("#guanlian").live("click",function(){
+		guanlian();
+	});
+	function guanlian(){
+		//1.得到所有子节点id 并传递到弹出框界面
+		var treeNodes = window.top.getTreeNode();
+		if (treeNodes.length != 1) {
+			alert("请选择一个节点！");
+			return;
+		}
+		var id = getNodeById(id);
+		//3.打开弹出框界面
+		var dia_log = {
+			"width":700,
+			"height":400,
+			"title":"关联资源节点",
+			"url":"ziyuan-gl.html",
+			"btn_close":false,
+			"btn_save":false,
+			save:function(){
+				d.iframe.contentWindow.glNodes(d,getNodeById(id),initData);	
+			},
+			onload : function() {
+				d.iframe.contentWindow.complete(selectedNodes);	
+			}
+		}
+		d = dialog(dia_log);
+	}
+	function reinit(){
+		var id = getNodeById(id);
+		d.iframe.contentWindow.glNodes(d,getNodeById(id),initData);
+	}	
+</script>
+</head>
+
+				
+<body>
+<div class="list-max-div">      
+    <!--  查询区域 -->  
+  	<div class="list-search hide">
+    	<div class="search-top-title"><span class="search-icon"></span>资源节点</div>
+        <div class="list-search-content">
+            <div class="search-top-div">
+                <table class="search-table">
+                    <tr>
+                        <th>用户名：</th>
+                        <td>
+                            <input type="text" class="search-ipt"/>
+                        </td>
+                        <th>案件编号：</th>
+                        
+                        <td>
+                            <input type="text" class="search-ipt"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>开始时间：</th>
+                        <td>
+                             <input type="text" class="search-ipt-time"/>
+                        </td>
+                        <th>结束时间：</th>
+                        <td>
+                             <input type="text" class="search-ipt-time"/>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="search-top-button">
+                <span class="btn btn-search"><span class="btn-img"></span><span class="btn-title">查询</span></span>
+            </div>
+        </div>
+    </div>
+    
+    <!--  列表显示 -->
+    <div class="list-list">
+        <!--  列表操作栏区域  -->
+        <div class="list-nav">
+            <div class="panelbar">
+                <a href="javascript:void(0);" target="index-iframe"><button class="panelbar-add" id="addZiyuan"><span class="icon"></span>新增</button></a>
+                <button class="panelbar-add" id="addZiyuans"><span class="icon"></span>批量新增</button>
+                <button class="panelbar-upd" id="reset"><span class="icon"></span>修改</button>
+                <button class="panelbar-del" id="delete-password"><span class="icon"></span>删除</button>
+                <button class="panelbar-upd" id="guanlian"><span class="icon"></span>关联</button>
+            </div>
+        </div>
+        <!--数据列表区域-->
+        <div class="grid">
+            <div class="grid-header">
+                <div class="grid-tab-thead-father">
+                    <table class="grid-list">
+                        <tr>
+                        	<th width="40">序号</th>
+                            <th width="35"><input type="checkbox"/></th>
+                            <th width="230">节点id</th>
+                            <th>节点名称</th>
+                            <th>节点地址</th>
+                            <th>访问用户名</th>
+                            <th>访问密码</th>
+                            <th>节点通道号</th>
+                            <th>节点状态</th>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <div class="grid-tbody">
+                <div class="grid-tab-tbody-father">
+                    <table class="grid-list" id="list-show">
+                    </table>
+                </div>
+            </div>
+            
+            <!--  分页 -->
+            <div class="grid-page">
+               <div id="pagation"></div>
+            </div>
+        </div>
+        <!-- 列表end  -->
+    </div>
+</div>
+</body>
+</html>
