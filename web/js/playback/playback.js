@@ -39,7 +39,16 @@ $.fn.setTime = function(time){
 					curTimeBar.setMidLineTime(time);
 				}
 			}
-		}
+			/*else if (navigator.userAgent.indexOf('Firefox') >= 0)
+			{
+				curTimeBar.setMidLineTime(time);
+			}*/
+			//除了ie8等
+			else{
+				    curTimeBar.setMidLineTime(time);
+				}
+    } 
+		
 }
 /**
  * 获取时间

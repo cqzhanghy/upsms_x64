@@ -199,7 +199,7 @@ body{ font-size:13px; color:#333; font-family:"宋体";}
 /*刷新*/
 .refresh{ float:right; width:16px; height:17px; cursor:pointer; margin-right:10px; margin-top:8px; background:url(../img/icon/001.png) no-repeat; display:none;}
 
-.alert-dialog-content{ position:absolute; width:400px; height:400px; left:50%; top:50%; margin-left:-225px; margin-top:-200px; z-index:10001; overflow:hidden;}
+
 
 
 

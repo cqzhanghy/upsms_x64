@@ -182,19 +182,13 @@
 	//监听点击事件
 	$('.canvas').live('click',function(e){
 			//鼠标点击，画出一个园
-			var txt=$(".two-select").val();
 			var wid = $('.canvas-show').width();
 			var hei = $('.canvas-show').height();
 			var canvas = getCanvas();
 			var context = canvas.getContext('2d');
-			var drawColor;
-			if(txt=="sw"){
-				drawColor=$("input[name='radios']:checked").val(); //获取画笔的颜色的值,3蓝色,4表示黄色
-			}
-			else if(txt=="sw_xmzjs"){
-				drawColor=$("input[name='radios2']:checked").val(); //获取画笔的颜色的值,3蓝色,4表示黄色
-			}
-			if(txt=='sw'|| txt=="sw_xmzjs"){
+			var drawColor=$("input[name='radios']:checked").val(); //获取画笔的颜色的值,3蓝色,4表示黄色
+			var txt=$(".two-select").val();
+			if(txt=='sw'){
 				x1 = e.clientX - 15;
 				y1 = e.clientY - 117;
 			}else{
@@ -271,7 +265,7 @@
 					}
 				}
 			}
-			if(txt=='sw' || txt=="sw_xmzjs"){
+			if(txt=='sw'){
 				if(drawColor=='3'){
 					bai.push({
 						x : parseFloat((x1/wid*100).toFixed(2)),
@@ -372,17 +366,10 @@
 		context.closePath();
 		//context.fillStyle = 'rgba(0,238,22,0.6)';
 		//获取画笔的颜色的值,3表示蓝色,4表示黄色
-		var txt=$(".two-select").val();
-		var drawColor;
-		if(txt=="sw_xmzjs")
-		{
-			drawColor=$("input[name='radios2']:checked").val();
-		}
-		else if(txt=="sw"){
-			 drawColor=$("input[name='radios']:checked").val();
-			}
-		else{
-			  drawColor='3';
+		var drawColor=$("input[name='radios']:checked").val(); 
+			var txt=$(".two-select").val();
+			if(txt!=="sw"){
+				drawColor=3;
 			}
 			if(drawColor=='3'){
 				context.fillStyle="blue";
@@ -412,9 +399,6 @@
 		parent = treeNode.isParent;
 		$("#video").text(treeNode.title);
 		//改变画笔颜色时,从新的位置描点
-		$("input[name='radios2']").change(function(){
-			newCanvasWrite();
-			})
 		$("input[name='radios']").change(function(){
 			newCanvasWrite();
 		});
@@ -484,7 +468,6 @@
 					$(".water").addClass("hide");
 					$(".smog").addClass("hide");
 					$(".sw").addClass("hide");
-					$(".sw_xmzjs").addClass("hide");
 					$("input[type='text']").val("");
 					//$("input[type='checkbox'][value='0']").attr("checked","checked");
 					$("#jiance option:first").attr("selected","selected");
@@ -541,7 +524,7 @@
 					h : h2
 					});
 				}
-				bai= data.param.key_Edge;//可摆放 大门
+				bai= data.param.key_Edge;//可摆放
 				bai2= data.param.key_Alert;//不可摆放
 				if(data.enable=='1'){
 					$('#radio1').prop("checked", true);
@@ -610,7 +593,7 @@
 					
 				}
 				//返回类型为sw时,绘制图形并赋值
-				if(data.param.type == "sw" /*|| data.param.type == "sw_xmzjs"*/){
+				if(data.param.type == "sw"){
 					//返回参数的值(可摆放固废存放区域)
 					var key_Edge = data.param.key_Edge;
 					//返回参数的值(不可摆放固废存放区域)
@@ -630,45 +613,7 @@
 							
 						}
 					}
-					//返回参数的值(不可摆放固废存放区域)
-					if(data.enable=='1'){
-						if(key_Alert.length>0){					//当返回有值时，绘制区域
-							if(context!=null){
-								context.beginPath();
-								context.moveTo((wid*(key_Alert[0].x)/100).toFixed(2),(hei*(key_Alert[0].y)/100).toFixed(2));
-								for(i=1;i<key_Alert.length;i++){
-									context.lineTo((wid*(key_Alert[i].x)/100).toFixed(2),(hei*(key_Alert[i].y)/100).toFixed(2));
-								}
-								context.strokeStyle="yellow";
-								context.closePath();
-								context.stroke();
-							}
-						}
-					}
 					
-				}
-				//返回类型为sw_xmzjs时,绘制图形并赋值
-				if(data.param.type == "sw_xmzjs" /*|| data.param.type == "sw_xmzjs"*/){
-					//返回参数的值(可摆放固废存放区域)
-					var key_Gate = data.param.key_Gate;
-					//返回参数的值(不可摆放固废存放区域)
-					var	key_Alert = data.param.key_Alert;
-					if(data.enable=='1'){
-						if(key_Gate.length>0){					//当返回有值时，绘制区域
-							if(context!=null){
-								context.beginPath();
-								context.moveTo((wid*(key_Gate[0].x)/100).toFixed(2),(hei*(key_Gate[0].y)/100).toFixed(2));
-								console.log(key_Gate[0].x);
-								for(i=1;i<key_Gate.length;i++){
-									context.lineTo((wid*(key_Gate[i].x)/100).toFixed(2),(hei*(key_Gate[i].y)/100).toFixed(2));
-								}
-								context.strokeStyle="blue";
-								context.closePath();
-								context.stroke();
-							}
-							
-						}
-					}
 					//返回参数的值(不可摆放固废存放区域)
 					if(data.enable=='1'){
 						if(key_Alert.length>0){					//当返回有值时，绘制区域
@@ -761,6 +706,7 @@
 				}
             });
         });
+		
 	//通过改变下拉框的值 控制显示和隐藏
 	function change(e){
 		txt = e.options[e.selectedIndex].text;	
@@ -768,41 +714,27 @@
 			$(".water").removeClass("hide");
 			$(".sw").addClass("hide");	
 			$(".smog").addClass("hide");
-			$(".dustcar").addClass("hide");
-			$(".sw_xmzjs").addClass("hide");	
+			$(".dustcar").addClass("hide");		
 		}else if(txt == "固废检测"){
 			$(".sw").removeClass("hide");	
 			$(".water").addClass("hide");	
 			$(".smog").addClass("hide");
-			$(".dustcar").addClass("hide");
-			$(".sw_xmzjs").addClass("hide");		
+			$(".dustcar").addClass("hide");		
 		}else if(txt == "烟窗检测"){
 			$(".smog").removeClass("hide");
 			$(".sw").addClass("hide");	
 			$(".water").addClass("hide");	
-			$(".dustcar").addClass("hide");
-			$(".sw_xmzjs").addClass("hide");		
-		}
-		else if(txt=="固废检测（厦门定制）"){    /////////
-			$(".water").addClass("hide");
-			$(".sw").addClass("hide");	
-			$(".smog").addClass("hide");
-			$(".dustcar").addClass("hide");	
-			$(".sw_xmzjs").removeClass("hide");
-			clearCanvas();
-			}
-		else if(txt == "渣车检测"){
+			$(".dustcar").addClass("hide");		
+		}else if(txt == "渣车检测"){
 			$(".smog").addClass("hide");
 			$(".sw").addClass("hide");	
-			$(".water").addClass("hide");
-			$(".sw_xmzjs").addClass("hide");	
+			$(".water").addClass("hide");	
 			$(".dustcar").removeClass("hide");		
-		}else {
+		}else{
 			$(".smog").addClass("hide");		
 			$(".sw").addClass("hide");	
 			$(".water").addClass("hide");
-			$(".dustcar").addClass("hide");	
-			$(".sw_xmzjs").addClass("hide");
+			$(".dustcar").addClass("hide");			
 		}
 	}
 	//绘制sw类型的图形
@@ -813,7 +745,6 @@
 		if(context == null)
 			return;
 		var txts=$(".two-select").val(); 
-		if(txts=='sw')
 		if(bai!=null&&bai.length>0&&txts=='sw'){//可摆放
 			if(context!=null){
 				context.beginPath();
@@ -826,32 +757,7 @@
 				context.stroke();
 			}
 		}
-		
 		if(bai2!=null&&bai2.length>0&&txts=='sw'){//不可摆放
-			if(context!=null){
-				context.beginPath();
-				context.moveTo((wid*(bai2[0].x)/100).toFixed(2),(hei*(bai2[0].y)/100).toFixed(2));
-				for(i=1;i<bai2.length;i++){
-					context.lineTo((wid*(bai2[i].x)/100).toFixed(2),(hei*(bai2[i].y)/100).toFixed(2));
-				}
-				context.strokeStyle="yellow";
-				context.closePath();
-				context.stroke();
-			}
-		}//绘制sw_xmzjs
-		else if(bai!=null&&bai.length>0&&txts=='sw_xmzjs'){//可摆放
-			if(context!=null){
-				context.beginPath();
-				context.moveTo((wid*(bai[0].x)/100).toFixed(2),(hei*(bai[0].y)/100).toFixed(2));
-				for(i=1;i<bai.length;i++){
-					context.lineTo((wid*(bai[i].x)/100).toFixed(2),(hei*(bai[i].y)/100).toFixed(2));
-				}
-				context.strokeStyle="blue";
-				context.closePath();
-				context.stroke();
-			}
-		}
-		if(bai2!=null&&bai2.length>0&&txts=='sw_xmzjs'){//不可摆放
 			if(context!=null){
 				context.beginPath();
 				context.moveTo((wid*(bai2[0].x)/100).toFixed(2),(hei*(bai2[0].y)/100).toFixed(2));
@@ -894,14 +800,6 @@
 			var y2=smog[0].y;
 		}
 		if(txts=='sw'){
-			if((clickNum==0&&clickNum2!=0)||(clickNum!=0&&clickNum2==0)){
-				if(bai.length==0||bai2.length==0){
-					alert('至少选择两个不同的区域');
-					return false;
-				}
-			}
-		}
-		if(txts=='sw_xmzjs'){
 			if((clickNum==0&&clickNum2!=0)||(clickNum!=0&&clickNum2==0)){
 				if(bai.length==0||bai2.length==0){
 					alert('至少选择两个不同的区域');
@@ -958,24 +856,13 @@
 				"key_Edge":bai		//上面所有点击坐标的集合
 			}	
 		}
-		var params6 = {
-			"method":"set_ana_node_info",
-			"sessionid":session,
-			"id":chanid,	
-			"enable":$("input[type='checkbox']").is(':checked'),
-			"param":{
-				"type":"sw_xmzjs",
-				"key_Alert":bai2,
-				"key_Gate":bai		//上面所有点击坐标的集合
-			}	
-		}
 		var params5 = {
 			"method":"set_ana_node_info",
 			"sessionid":session,
 			"id":chanid,	
 			"enable":$("input[type='checkbox']").is(':checked'),
 			"param" : {
-				"type": "dustcar"
+				"type": "muck_truck"
 			}
 		}
 		if(txt == "污水检测"){
@@ -990,13 +877,7 @@
 		}else if(txt == "渣车检测"){
 			paramss = {};
 			paramss = params5;
-		}
-		else if(txt="固废检测（厦门定制）")
-		{
-			paramss = {};
-			paramss = params6;
-		}
-		else{
+		}else{
 			return false;	
 		}
 		//定义提交的时候验证
@@ -1025,14 +906,6 @@
 				}
 				//设置sw图形保存后闭合
 				if(txts=='sw'){
-					clearCanvas();
-					var canvas = getCanvas();
-					var context = canvas.getContext('2d');
-					var wid = $('.canvas-show').width();
-					var hei = $('.canvas-show').height();
-					drawSw(wid,hei);
-				}
-				if(txts=='sw_xmzjs'){
 					clearCanvas();
 					var canvas = getCanvas();
 					var context = canvas.getContext('2d');
@@ -1147,8 +1020,7 @@
                                 <option value="water">污水检测</option>
                                 <option value="smog">烟窗检测</option>
                                 <option value="sw">固废检测</option>
-                                <option value="dustcar">渣车检测</option>
-                                <option value="sw_xmzjs">固废检测（厦门定制）</option>
+                                <option value="muck_truck">渣车检测</option>
                             </select>
                         </td>
                     </tr>
@@ -1168,20 +1040,6 @@
                     		<td colspan="3">
                     			<input type="radio" value="3" id="radio3" class="validate[required]" checked="checked" name='radios'/><label for="radio3">可摆放区域（蓝色）</label>
                     			<input type="radio" value="4" id="radio4" class="validate[required]"  name='radios'/><label for="radio4">不可摆放区域（黄色）</label>
-                    		</td>
-                    	</tr>
-                        
-                        
-                       
-                    </tbody> 
-                      <tbody class="sw_xmzjs hide">
-                    	<tr>
-                    		<th>
-                    			选择区域：
-                    		</th>
-                    		<td colspan="3">
-                    			<input type="radio" value="3" id="radio5" class="validate[required]" checked="checked" name='radios2'/><label for="radio5">大门区域（蓝色）</label>
-                    			<input type="radio" value="4" id="radio6" class="validate[required]"  name='radios2'/><label for="radio6">不可摆放区域（黄色）</label>
                     		</td>
                     	</tr>
                         

@@ -355,10 +355,30 @@
 		{
 		    tree.empty();
 		}
+		var online = $("#online_list");
+		var offline = $("#offline_list");
+		if(online)
+		{
+		    online.empty();
+		}
+		if(offline)
+		{
+		    offline.empty();
+		}
 		var nodes = data["node"];
 		for(var i=0; i<nodes.length; i++)  
         {  
 			nodes[i]["isParent"] = false;
+			if(1 == nodes[i]["is_online"])
+			{
+			var str = "<li style='color:rgb(0,250,0)'>" + nodes[i]["title"] +"</li>";
+			online.append(str);
+			}
+			else
+			{
+			var str = "<li style='color:rgb(250,0,0)'>" + nodes[i]["title"] +"</li>";
+			offline.append(str);
+			}
         }  
 		$.fn.zTree.init(tree, setting, nodes);
 		
@@ -454,6 +474,29 @@
   </object>
   </div>
   <br />
+  
+  
+  <div id="c" style="float:left;">
+ <div id="a" style="float:left; height:50px;width:500px">
+ <font style="color:rgb(0,0,0)">在线视频监控点：  </font>
+  <br />
+  <ol id="online_list" color='red'>
+  <li>Coffee</li>
+  <li>Milk</li>
+  </ol>
+ </div>
+ <div id="b" style="float:left; height:50px;width:500px">
+  <font style="color:rgb(0,0,0)">离线视频监控点：  </font>
+  <br />
+  <ol id="offline_list" color='red'>
+  <li>Coffee</li>
+  <li>Milk</li>
+  </ol>
+ </div>
+ <div style="clear:both"></div><!--这个层很有用，必须要，否则可能不兼容。--> 
+</div>
+
+
   <br />
 </body>
 </html>

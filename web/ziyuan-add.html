@@ -43,7 +43,7 @@
 			return false;
 		}
 		var NodesName = $("#NodesName").val();	
-		var NodesUrl = $("#NodesUrl").val();
+		var NodesUrl = $("#NodesUrl").val();	
 		var NodesLeixing = $("#NodesLeixing option:selected").text();	
 		if(NodesLeixing == $("#NodesLeixing option:first").text()){
 			window.top.sure_show($("#NodesLeixing option:first").text());
@@ -51,7 +51,7 @@
 		}
 		var NodesUser = $("#NodesUser").val();	
 		var password = $("#password").val();	
-		var NodesTongdao = $("#NodesTongdao").val();
+		var NodesTongdao = $("#NodesTongdao").val();	
 		var params = {
 			"method":"add_node",
 			"sessionid":session,

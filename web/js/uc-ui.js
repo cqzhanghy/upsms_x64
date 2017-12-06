@@ -243,7 +243,7 @@ function click_selected(tab){
 			$(".btn-title1").text(btn_title);
 		}
 		$("#dialog-iframe").attr("src",url);
-		var dialogIframe = $("#dialog-iframe")[0];//jquery对象
+		var dialogIframe = $("#dialog-iframe")[0];
 		if (!/*@cc_on!@*/0) { //if not IE
 			dialogIframe.onload = function(){
 				dia_log.onload();
@@ -454,9 +454,8 @@ function twoList_width(){
 function video_show(){ 
 	jQuery(".video-hand .video_test").click(function(){
 		var show = jQuery(".video-show"); 
-		var count = jQuery(this).attr("count");/*取得count属性*/
+		var count = jQuery(this).attr("count");
 		var length = show.find("ul").find("li").length;
-		console.log("length"+length);
 		var num = length - count;
 		if(num<=0){
 			for(var i=0;i<(-num);i++){
@@ -464,47 +463,11 @@ function video_show(){
 			}
 			jQuery(".video-show").attr("class","").addClass("video-show");
 			jQuery(".video-show").addClass("video-show"+count);	
-			if(count==1)
-			{
-				var playObject=jQuery(".video-show li");
-				playObject.each(function(index, element) {
-					if($(this).hasClass("selected"))
-					{
-						$(this).show().siblings().hide();
-					}
-				});
-			}
-			else{
-				  var playObject=jQuery(".video-show li");
-				   playObject.each(function(index, element) {
-					   $(this).addClass('live').siblings().removeClass('live');
-				   $(this).show();
-				});
-				}
 			$(".player").css("width",$("#video-show li").width());
 			$(".player").css("height",$("#video-show li").height()-40);
 		}else{
 			jQuery(".video-show").attr("class","").addClass("video-show");
-			jQuery(".video-show").addClass("video-show"+count);
-			var playObject=jQuery(".video-show li");
-			if(count==1)
-			{
-				
-				playObject.each(function(index, element) {
-					if($(this).hasClass("selected"))
-					{
-						$(this).addClass('live').siblings().removeClass('live');
-						$(this).show().siblings().hide();
-						
-					}
-				});
-			}
-			else{
-				  
-				   playObject.each(function(index, element) {
-					 $(this).show();
-				});
-				}
+			jQuery(".video-show").addClass("video-show"+count);		
 			$(".player").css("width",$("#video-show li").width());
 			$(".player").css("height",$("#video-show li").height()-40);
 		}

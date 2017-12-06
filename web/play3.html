@@ -1,4 +1,4 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -30,6 +30,7 @@ var addr = url;
 var type = "upsms";
 var chanid;
 var time;
+var timeobj;
 var stratTime; //定义视频开始回放时间
 //得到当前时间 时分秒
 var time = new Date();
@@ -142,6 +143,13 @@ function history(){
 	//将得到的值append到父级页面下
 	
 }
+function autoSetTime() {
+    var curTimeBar = timeBarCache['timeBar_' + $(this).attr('id')];
+    var realTime = $(".player")[0].GetOsdTime();
+    $('#playbackbar').setTime(realTime);
+
+}
+
 //父层 查询时间
 $(window.top.document.getElementById("searchHistory")).live("click",function(){
 	history();
@@ -158,10 +166,12 @@ $(window.top.document.getElementById("HistoryId")).find("li").live("click",funct
 			$(".player")[0].SetPlayTime(c);	
 		}
 	});	*/
+
+	clearInterval(timeobj);
+	timeobj = window.setInterval(autoSetTime, 1000);
 });
 
-
-//生成视频
+    //生成视频
 $(function(){
 	//定时播放时间拖动控件
 	/*$(".player").each(function(){

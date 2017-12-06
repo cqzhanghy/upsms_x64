@@ -30,7 +30,7 @@ $("#video-show li").live("click",function(e){
 var addr = url;
 var num = 0;	
 var num2; //获取码流值
-var ff = window.top.isIE();   //判断浏览器是否安装控件
+var ff = window.top.isIE(false);   //判断浏览器是否安装控件
 $(function(){
 	if(ff){
 	}else{
