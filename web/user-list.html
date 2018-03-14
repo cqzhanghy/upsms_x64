@@ -63,11 +63,16 @@
 	
 	//删除
 	$("#delete-password").live("click",function(){
+		var names=[];
 		var cecks = $("#list-show").find("tr").find(":checkbox[checked='checked']");
 		if(cecks.length == 0){
 			window.top.sure_show("请选择一条数据!");
 			 return false;	
 		}
+		cecks.each(function(index,ele){
+					var name =$(this).parent().parent().find("td[name='name']").text();
+					names.push(name);	
+				})
 		var d =null;
 		var dia_log = {
 			"width":"300",	
@@ -75,10 +80,7 @@
 			"title":"删除用户",
 			"url":"delUser.html", 
 			save:function(){
-				cecks.each(function(index,ele){
-				var name = $(this).parent().parent().find("td[name='name']").text();
-				d.iframe.contentWindow.dele(d,name,userList);
-				})
+				d.iframe.contentWindow.dele(d,names,userList);
 			}	
 		}
 		d = dialog(dia_log);

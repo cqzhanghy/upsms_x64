@@ -120,7 +120,13 @@
 	/*删除资源节点*/
 	function dele_Nodes(){
 		//1.选中
+		var nodesDel=[];
 		var ceck = $("#list-show").find("tr").find(":checkbox[checked='checked']");
+		ceck.each(function(index,ele){
+					var id =$(this).parent().parent().find("td[name='title']").attr('id');
+					updateId = id;
+					nodesDel.push(id);	
+				})
 		if(ceck.length == 0){
 			window.top.sure_show("请选择一条数据！");
 			return;	
@@ -131,12 +137,9 @@
 			"title":"删除资源节点"	,
 			"url":"ziyuan-delete.html",
 			save:function(){
-				ceck.each(function(index,ele){
-					var id =$(this).parent().parent().find("td[name='title']").attr('id');
-					updateId = id;
-					d.iframe.contentWindow.deleteNodes(d, getNodeById(id), initData);	
-				})				
+				d.iframe.contentWindow.deleteNodes(d,nodesDel, initData);
 			}
+			
 				
 		}
 		d = dialog(dia_log);

@@ -1,4 +1,4 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -29,6 +29,9 @@ function validateSession(){
 }
 function validateSession2(data){
 	if(data.retcode=="-3002"){
+		console.log(data);
+		console.log(data.ret);
+		
 		window.location.href="/login.html";
 	}
 }
@@ -94,44 +97,24 @@ function validateSession2(data){
                         </div>
                     </div>
                     <div class="menu-tree">
-                        <div class="menu-tree-search hide">
-                            <input type="text" class="search-ipt"/><input type="button" value="查找" class="search-btn"/>
-                        </div>
-                        <div id="" class="ztree ztree-show">
+                        <div id="videoTree" class="ztree ztree-show">
 
                         </div>
                         <div class="play-show">
                         	<div class="title">
                             	<img src="img/li-show.png"/><span class="tit">历史记录</span>
                             </div>
-                            <div class="search">
-                            	<table class="search-table search-table2">
-                                	<tr>
-                                    	<th>开始时间：</th>
-                                        <td>
-                                        	<input type="text" id="startTime" class="search-ipt-time search-time2 Wdate" onfocus="WdatePicker({dateFmt:'yyyy-MM-dd HH:mm:ss'});"/>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                    	<th>结束时间：</th>
-                                        <td>
-                                        	<input type="text" id="endTime" class="search-ipt-time search-time2 Wdate" onfocus="WdatePicker({dateFmt:'yyyy-MM-dd HH:mm:ss'});"/>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                    	<th></th>
-                                        <td>
-                                        	<span class="btn btn-search" id="searchHistory">
+                            <div class="search" id="search-time">
+                       
+                              
+                            </div>
+                            <span class="btn btn-search" id="searchHistory">
                                             	<span class="btn-img"></span>
                                                 <span class="btn-title">查询</span>
-                                            </span>
-                                        </td>
-                                    </tr>
-                                </table>
-                            </div>
-                            <div class="cont">
+                            </span>
+                           <!--/* <div class="cont">
                             	<ul id="HistoryId"></ul>
-                            </div>
+                            </div>*/-->
                         </div>
                     </div>
                 </div>
@@ -152,6 +135,7 @@ function validateSession2(data){
         	<span class="copyright">版权所有：重庆扬讯软件技术有限公司<span>当前版本号：<strong class="data-cord"></strong></span></span>
         </div>
         
+        
         <div style="display:none">
         	<object id="checkObject" type='application/x-upview'></object>
         </div>
@@ -160,11 +144,160 @@ function validateSession2(data){
         </div>
         
     </div>
+    </div>
 </body>
 </html>
 <script type="text/javascript">
-	//注销
-	jQuery("#logout").live("click",function(){
+	
+var versionNum=8;
+//重新加载日历表
+
+//获取当前时间
+function getNowFormatDate() {
+        var date = new Date();
+        var seperator1 = "-";
+        var year = date.getFullYear();
+        var month = date.getMonth() + 1;
+        var strDate = date.getDate();
+        if (month >= 1 && month <= 9) {
+            month = "0" + month;
+        }
+        if (strDate >= 0 && strDate <= 9) {
+            strDate = "0" + strDate;
+        }
+        var time = year + seperator1 + month + seperator1 + strDate;
+        return time;
+    }
+var dateArray=[,];
+var clickTime;
+function resetCalender(dateArray){
+	 if(typeof(clickTime)=='undefined')
+	 {
+		clickTime=getNowFormatDate();
+	 }
+     WdatePicker({
+	 position:{left:10,top:5},
+	 startDate:clickTime,
+     eCont:'search-time',
+	 ychanged:function(dp){
+	   timeChioce=dp.cal.getNewDateStr();
+	   var newMonth=dp.cal.newdate.M;
+	   var newYear=dp.cal.newdate.y;
+	   var newDay=dp.cal.newdate.d;
+	   clickTime=newYear+"-"+newMonth+"-"+newDay;
+	   var start=newYear+"-"+newMonth+"-"+1+" "+"00:00:00";
+	   var end;
+	   if(newMonth==12)
+	   {
+		   end=newYear+"-"+newMonth+"-"+"31"+" "+"23:59:59";
+	   }else{
+	     end=newYear+"-"+(newMonth+1)+"-"+"1"+" "+"00:00:00";
+	   }
+	   searchQuantumTime(start,end);
+	  },
+     Mchanged:function(dp){
+	  timeChioce=dp.cal.getNewDateStr();
+	   var newMonth=dp.cal.newdate.M;
+	   var newYear=dp.cal.newdate.y;
+	   var newDay=dp.cal.newdate.d;
+	   clickTime=newYear+"-"+newMonth+"-"+newDay;
+	   var start=newYear+"-"+newMonth+"-"+1+" "+"00:00:00";
+	   var end;
+	   if(newMonth==12)
+	   {
+		   end=newYear+"-"+newMonth+"-"+"31"+" "+"23:59:59";
+	   }else{
+	     end=newYear+"-"+(newMonth+1)+"-"+"1"+" "+"00:00:00";
+	   }
+	   searchQuantumTime(start,end);
+    },
+  /* onpicked:function(dp){
+	   timeChioce=dp.cal.getNewDateStr();
+    },*/
+   specialDates:dateArray
+	})
+}
+
+window.onload=resetCalender();
+var timeChioce=getNowFormatDate();
+//点击节点时，获取时间，第一次整理有视频的时间段，并画上线 ,todo:同时处理将时间段在日历表上标记出来
+function setSearchTime(){
+  var date;
+  if(typeof(clickTime)=='undefined'){
+	 date=new Date(Date.parse(clickTime.replace(/-/g, "/")));
+  }else{
+	 date=new Date(Date.parse(clickTime.replace(/-/g, "/")));
+  }
+   var Month=date.getMonth()+1;
+   var Year=date.getFullYear();
+   var Day=date.getDay();
+   var start=Year+"-"+Month+"-"+1+" "+"00:00:00";
+   var end;
+   if(Month==12)
+   {
+	   end=(Year)+"-"+Month+"-"+"31"+" "+"23:59:59";
+   }
+   else{
+	     end=Year+"-"+(Month+1)+"-"+"1"+" "+"00:00:00";
+	   }
+     searchQuantumTime(start,end);
+	}
+//日期控件
+var chanid;
+function searchQuantumTime(startTime,endTime){
+	/*if(typeof(chanid)=='undefined')
+	{
+		return;
+	}*/
+	var params = {
+					"method":"query_node_rcd",
+					'sessionid':session,
+					"id":chanid,
+					's_time':startTime,
+					'e_time':endTime
+	}
+	 $.post("/upapi",JSON.stringify(params),function(data){
+		 dateArray=[,];
+		 if(typeof(data.rcds)!=='undefined')
+		 { 
+			if(data.rcds.length>0){
+                for(var i=0;i<data.rcds.length;++i)
+				{
+					var s=data.rcds[i].s_time.split(" ");
+					var e=data.rcds[i].e_time.split(" ");
+					var ds=s[0].split("-");
+					var de=e[0].split("-");
+					var s_Int=parseInt(ds[2]);
+					var e_Int=parseInt(de[2]);
+					for(var j=s_Int;j<=e_Int;++j)
+					{
+						if(j<10)
+						{
+							j="0"+j;
+						}
+						var date=ds[0]+"-"+ds[1]+"-"+j;
+						dateArray.push(date);
+					}
+				}
+			}
+			$("#search-time").empty();
+			resetCalender(dateArray);
+			document.getElementById('index-iframe').contentWindow.dreawFile(data.rcds);
+		 }
+		})
+	}
+   //点击查询，获取当天视频的起始时间，设置开始播放时间
+ $('#searchHistory').click(function(){
+		if(typeof(timeChioce)=='undefined'){
+			window.top.sure_show("请选择时间!");
+			return;
+			}else{
+				 document.getElementById('index-iframe').contentWindow.history(timeChioce);
+	}
+})
+	
+   //注销
+   jQuery("#logout").live("click",function(){
 		logout();	
 	});
 	function logout(){
@@ -180,8 +313,22 @@ function validateSession2(data){
 			}
 		});	
 	}
-	//监测ie浏览器是否安装插件
-	function isIE(show){
+  /* 监测ie浏览器是否安装插件
+  function isIE(show){
+	  var plugin=document.getElementById("checkObject");
+	  var pp = document.getElementById("checkCanvas")
+	  var unde = typeof(pp.getContext);
+	  if(typeof(plugin.version) !== "undefined"){
+		 return true;
+		}
+		else if(unde!== 'undefined'){
+			return false;
+			}
+		 else{
+		   alert("您没有安装upview视频控件，导致不能播放视频，请先下载upview控件！");	
+					window.location.href = "/UpViewWeb.exe";
+		 }
+
 		var pp = document.getElementById("checkCanvas");
 		var unde = typeof(pp.getContext);
 		if(show){
@@ -189,7 +336,7 @@ function validateSession2(data){
 			var plugin=document.getElementById("checkObject");
 			if(!!window.ActiveXObject || "ActiveXObject" in window){
 				if(typeof(plugin.version) == "undefined" && unde == 'undefined') {
-					alert("您没有安装upview视频控件，导致不能播放视频，请先下载upvie控件！");	
+					alert("您没有安装upview视频控件，导致不能播放视频，请先下载upview控件！");	
 					window.location.href = "/UpViewWeb.exe";
 				}else{
 					fla = true;
@@ -236,7 +383,7 @@ function validateSession2(data){
 			return fla;	
 		}
 	}
-		
+		*/
 	//启用dialog
 	$(function(){
 		//打开页面 树节点显示数据
@@ -277,7 +424,8 @@ function validateSession2(data){
 		} 	
 		$.post("/upapi",JSON.stringify(params2),function(data){
 			if(data.retcode == 0){
-				$(".data-cord").text(data.version);
+				var version=data.version+"."+versionNum;
+				$(".data-cord").text(version);
 			}	
 		});
 		//isIE(false);
@@ -642,6 +790,7 @@ function validateSession2(data){
 		//子节点隐藏
 	});
 	
+	
 	//视频回放
 	$("#play").live("click",function(){
 		validateSession();
@@ -652,9 +801,9 @@ function validateSession2(data){
 		//parent.document.getElementById("index-iframe").contentWindow.location.href = "play.html";
 		parent.document.getElementById("index-iframe").contentWindow.location.href= "play3.html";
 		//定义左边菜单内容 
-		$(".menu-left .tit").text("录像回放");
+		/*$(".menu-left .tit").text("录像回放");
 		$(".panelbar2").hide();
-		$(".ztree").empty();
+		$(".ztree").empty();*/
 		$(".ztree").css("bottom",300);
 		$(".play-show").show();
 		index_click3();
@@ -730,18 +879,18 @@ function validateSession2(data){
 	});
 	$(".refresh").live("click",function(){
 		initTree();
-	});
+  });
 //返回密码到index2.html页面中
 /*function passWord(passw){
-	var str = window.location.search;
-	if(str.indexOf(passw)!=-1){
-		var pos_start = str.indexOf(passw) + passw.length +1;
-		var pos_end = str.indexOf("&",pos_start);
-		if(pos_end==-1){
-			return str.substring(pos_start);	
-		}else{
-						
-		}	
-	}
+  var str = window.location.search;
+  if(str.indexOf(passw)!=-1){
+	  var pos_start = str.indexOf(passw) + passw.length +1;
+	  var pos_end = str.indexOf("&",pos_start);
+	  if(pos_end==-1){
+		  return str.substring(pos_start);	
+	  }else{
+					  
+	  }	
+  }
 }*/
 </script>

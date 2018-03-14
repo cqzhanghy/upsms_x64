@@ -57,7 +57,7 @@ label{ cursor:pointer; margin-right:10px;}
 
 
 /*单列表单页面*/
-.list-max{ position:absolute; left:0; top:0; right:0; bottom:0;}
+.list-max{ position:absolute; left:0; top:0; right:0; bottom:0;background-color:#4b4a4a;}
 .list-top{ display:none; width:100%; height:28px; line-height:28px; margin-top:5px; background:#92c9f0; border-bottom:2px solid #2970a4;}
 .list-top .title{ float:left; height:28px; min-width:130px; width:auto; text-align:center; padding:0 10px; font-size:14px; line-height:28px; background:#2871a4; color:#fff;}
 .list-content{ position:absolute; left:0; top:0; right:0; bottom:35px; background:#fff; overflow:auto;}
@@ -74,7 +74,7 @@ label{ cursor:pointer; margin-right:10px;}
 .one-ipt{ height:22px; line-height:22px; text-indent:2px; border:1px solid #ccc; width:300px; float:left; margin-top:2px; vertical-align:top; color:#555;}
 .one-ipt-time{ height:22px; line-height:22px; text-indent:2px; border:1px solid #ccc; width:300px; background:url(../img/time.png) right 3px no-repeat; background-color:#fff; color:#555; margin-top:2px; vertical-align:top;}
 .one-textarea{ width:300px; max-width:300px; height:76px; overflow:auto; border:1px solid #ccc; margin-top:2px; vertical-align:top; color:#555;}
-.one-choose-ipt{ width:252px;}
+
 .one-table tr td .one-select:focus,
 .one-table tr td .one-ipt:focus,
 .one-table tr td .one-ipt-time:focus,
@@ -329,6 +329,7 @@ label{ cursor:pointer; margin-right:10px;}
 .video-table tr td{ text-align:left; font-weight:normal;}
 .video-table tr td input[type='radio']{ display:inline-block; height:24px; margin-top:0; line-height:24px; vertical-align:top; margin-right:5px;}
 .video-table tr td label{ display:inline-block; color:#013F74; height:24px; margin-top:0; line-height:24px; vertical-align:middle;}
+.cir-play{width:99%;height:100%;z-index:999;margin-top:20px;background:#000;position:absolute;cursor:pointer;}
 
 /*资源共享*/
 .list-max-div2{ width:40%; margin-left:20px;}
@@ -358,7 +359,9 @@ label{ cursor:pointer; margin-right:10px;}
 
 /*视频播放界面*/
 .video-titleShow{ width:100%; height:20px; line-height:20px; text-in dent:6px; background:#000; color:#29BE30;}
-.video-show2{ position:absolute; left:0; top:20px; right:0; bottom:100px;}
+.video-show2{ position:absolute; left:0; top:20px; right:0; bottom:100px;background-color:#000;}
+.Player{width:100%;height:100%;background-color:#000;}
+.canvasPlayer{position:absolute;width:100%;height:100%;}
 .video-oprate2{ position:absolute; left:0; right:0; bottom:0; height:100px; background:#121212;}
 .play-btn{ float:left; height:auto; position:absolute; left:50%; margin-left:-150px; width:300px;}
 .play-btn span{ float:left; width:27px; height:20px; cursor:pointer; margin-top:8px; margin-left:20px;}

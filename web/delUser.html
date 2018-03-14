@@ -16,11 +16,11 @@
 <script type="text/javascript">
 	var session = $.cookie("sessionid");
 	//得到id
-	function dele(d,name,userList){
+	function dele(d,names,userList){
 		 var params = {
-			"method":"del_user",
+			"method":"del_users",
 			"sessionid":session	,
-			 "user":name
+			 "users":names
 		}
 		$.post("/upapi",JSON.stringify(params),function(data){
 			if(data.retcode==0){

@@ -170,7 +170,7 @@ function FileInfo(b, h, e, f, d, g, a, c) {
 	this.m_ixMax = 0;
 	this.m_iY = h;
 	this.m_iWidth = e;
-	this.m_iHeight = f;
+	this.m_iHeight = 7;
 	this.m_cColor = g;
 	this.m_iType = d;
 	this.m_tStartTime = a;
@@ -224,6 +224,7 @@ function TimeBar(a) {
 	this.m_canvas = a;
 	this.m_ctx = a.getContext("2d");
 	this.m_iMinFileWidth = 1;
+    this.signFileColor="rgb(255,204,0)"
 	this.backgroundColor = "rgb(0, 0, 0)";
 	this.partLineColor = "rgb(48,48,48)";
 	this.channelNameColor = "rgb(150, 150, 150)";
@@ -232,7 +233,7 @@ function TimeBar(a) {
 	this.middleLineTimeColor = "rgb(255, 255, 255)";
 	this.defaultFileColor = "rgb(0, 255, 0)";
 	this.cmdFileColor = "rgb(21, 184, 155)";
-	this.scheFileColor = "rgb(99, 125, 236)";
+	this.scheFileColor = "rgb(99, 125, 236)";//标记的段颜色
 	this.alarmFileColor = "rgb(248, 71, 126)";
 	this.manualFileColor = "rgb(247, 199, 5)";
 	this.m_fMidTimeFont = "14px Verdana";
@@ -389,6 +390,63 @@ TimeBar.prototype.repaint = function() {
 	this.m_ctx.moveTo(0, this.m_iHeight - this.m_iBlankHeight / 2);
 	this.m_ctx.lineTo(this.m_iWidth, this.m_iHeight - this.m_iBlankHeight / 2);
 	this.m_ctx.stroke();
+    this.m_ctx.strokeStyle = this.signFileColor
+    this.m_ctx.lineWidth = 1;
+    this.m_ctx.beginPath();
+    this.m_ctx.moveTo(0, this.m_iTimeRectHeight+1);
+    this.m_ctx.lineTo(this.m_iWidth, this.m_iTimeRectHeight+1);
+    this.m_ctx.stroke();
+    this.m_ctx.strokeStyle = this.signFileColor
+    this.m_ctx.lineWidth = 1;
+    this.m_ctx.beginPath();
+    this.m_ctx.moveTo(0, this.m_iTimeRectHeight + 10);
+    this.m_ctx.lineTo(this.m_iWidth, this.m_iTimeRectHeight + 10);
+    this.m_ctx.stroke();
+    /*画有视频的时间段*/
+	
+
+    /*this.m_ctx.strokeStyle = this.scheFileColor
+    this.m_ctx.lineWidth = 8;
+    this.m_ctx.beginPath();
+    this.m_ctx.moveTo(0（传回来的开始点）, this.m_iTimeRectHeight+5);
+    this.m_ctx.lineTo(this.m_iWidth（每段时间的长度）, this.m_iTimeRectHeight+5);
+    this.m_ctx.stroke();*/
+/*
+    if(typeof(this.timeDatas)=='undefined')
+	{
+		
+	}
+	else{
+		 this.m_ctx.strokeStyle = this.scheFileColor;
+		 this.m_ctx.lineWidth = 8;
+         this.m_ctx.beginPath();
+		 var a = new Time();
+		 var start;
+		 var end;
+		 
+		var  selectedHour;
+		var selectedMinutes;
+		var selectedSeconds;
+		
+		  for(var i=0;i<this.timeDatas.length;++i)
+		  {   
+		  
+		         var startTime=new Date(this.timeDatas[i].s_time);
+				 var endTime=new Date(this.timeDatas[i].e_time);
+				 var shour=startTime.getHours();
+				 var ehour=endTime.getHours();
+				
+				 if (this.ScaleInfo[shour].isInRange(this.m_iFileListStartPos, this.m_iWidth)&&this.ScaleInfo[shour].isInRange(this.m_iFileListStartPos, this.m_iWidth))
+				 {
+				    this.m_ctx.beginPath();
+					this.m_ctx.moveTo(this.ScaleInfo[shour].m_ix, this.m_iTimeRectHeight+5);
+					this.m_ctx.lineTo(this.ScaleInfo[ehour].m_ix, this.m_iTimeRectHeight+5);
+					this.m_ctx.stroke();
+				 }
+		  }
+		}
+*/
+
 	this.m_ctx.fillStyle = this.channelNameColor;
 	this.m_ctx.font = this.m_fChannelNameFont;
 	this.m_ctx.fillText(this.m_szCurChannelName, 0, this.m_iTimeRectHeight
@@ -398,7 +456,7 @@ TimeBar.prototype.repaint = function() {
 	this.m_ctx.font = this.m_fScaleFont;
 	this.m_ctx.lineWidth = 1;
 	for (i = 0; i < this.ScaleInfoNum; i++) {
-		if (this.ScaleInfo[i]
+		if (this.ScaleInfo[i]//得到当前显示在界面上的时间刻度列表
 				.isInRange(this.m_iFileListStartPos, this.m_iWidth)) {
 			this.m_ctx.beginPath();
 			this.m_ctx.moveTo(this.ScaleInfo[i].m_ix, this.m_iTimeRectHeight);
@@ -417,6 +475,7 @@ TimeBar.prototype.repaint = function() {
 	this.m_ctx.moveTo(this.m_iMiddleLinePos, 0);
 	this.m_ctx.lineTo(this.m_iMiddleLinePos, this.m_iHeight);
 	this.m_ctx.stroke();
+	
 };
 TimeBar.prototype.updateScalePos = function() {
 	if (this.ScaleInfo.length == 0) {

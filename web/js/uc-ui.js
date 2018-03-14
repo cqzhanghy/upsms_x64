@@ -454,7 +454,7 @@ function twoList_width(){
 function video_show(){ 
 	jQuery(".video-hand .video_test").click(function(){
 		var show = jQuery(".video-show"); 
-		var count = jQuery(this).attr("count");
+		var count = jQuery(this).attr("count");/*取得count属性*/
 		var length = show.find("ul").find("li").length;
 		var num = length - count;
 		if(num<=0){
@@ -463,13 +463,53 @@ function video_show(){
 			}
 			jQuery(".video-show").attr("class","").addClass("video-show");
 			jQuery(".video-show").addClass("video-show"+count);	
+			if(count==1)
+			{
+				var playObject=jQuery(".video-show li");
+				playObject.each(function(index, element) {
+					if($(this).hasClass("selected"))
+					{
+						$(this).show().siblings().hide();
+					}
+				});
+			}
+			else{
+				  var playObject=jQuery(".video-show li");
+				   playObject.each(function(index, element) {
+					   $(this).addClass('live').siblings().removeClass('live');
+				   $(this).show();
+				});
+				}
 			$(".player").css("width",$("#video-show li").width());
 			$(".player").css("height",$("#video-show li").height()-40);
+			$(".cir-play").css("width",$("#video-show li").width());
+	        $(".cir-play").css("height",$("#video-show li").height()-40);
 		}else{
 			jQuery(".video-show").attr("class","").addClass("video-show");
-			jQuery(".video-show").addClass("video-show"+count);		
+			jQuery(".video-show").addClass("video-show"+count);
+			var playObject=jQuery(".video-show li");
+			if(count==1)
+			{
+				
+				playObject.each(function(index, element) {
+					if($(this).hasClass("selected"))
+					{
+						$(this).addClass('live').siblings().removeClass('live');
+						$(this).show().siblings().hide();
+						
+					}
+				});
+			}
+			else{
+				  
+				   playObject.each(function(index, element) {
+					 $(this).show();
+				});
+				}
 			$(".player").css("width",$("#video-show li").width());
 			$(".player").css("height",$("#video-show li").height()-40);
+			$(".cir-play").css("width",$("#video-show li").width());
+	        $(".cir-play").css("height",$("#video-show li").height()-40);
 		}
 	});
 }

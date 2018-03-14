@@ -13,18 +13,19 @@
 <script type="text/javascript">
 /*登录验证*/	
 var user,password;
-var remeberme;
+//var remeberme;
+var versionNum=8;
 $(function(){
 	$("#username").focus();	
 	//给用户存入值
-	if($.cookie("remeberme") == "true"){
-		$("#username").val($.cookie("user1"));
-		$("#password").val($.cookie("passeword1"));
-		$("#checkbox").attr("checked","checked");		
-	}else{
+	//if($.cookie("remeberme") == "true"){
+		//$("#username").val($.cookie("user1"));
+		//$("#password").val($.cookie("passeword1"));
+		//$("#checkbox").attr("checked","checked");		
+	//}else{
 		$("#username").val($.cookie("user1"));	
 		$("#checkbox").attr("checked",false);		
-	}
+	//}
 	//enter键模拟提交
 	$("body").keypress(function(e){
 		if(e.keyCode == 13){
@@ -48,19 +49,15 @@ function logIn(){
 	//密码要经过md5加密
 	$.post("/upapi",JSON.stringify(params),function(data){
 		if(data.retcode == 0){
-			window.location.href ="/index2.html";
+		     window.location.href ="/index2.html";
 			//登录的时候要存一个sessionid,记录登录时效
+			console.log(data.sessionid);
 			$.cookie("sessionid",data.sessionid, {expires : 30});
 			$.cookie("videopassw",password, {expires : 30});
 			$.cookie("user1",user, {expires : 30});
 			$.cookie("passeword1",password, {expires : 30});
-			//判断记住密码的时候，用户名和密码存入session
-			if($("#checkbox").attr("checked")=='checked'){
-				$.cookie("remeberme",true, {expires : 30});
-				//定义cookie时效
-			}else{
-				$.cookie("remeberme",false,{expires : 30});
-			}
+			$.cookie("remeberme",true, {expires : 30});
+			
 		}else{
 			$(".login-show3").show();	
 			$(".login-show2").hide();
@@ -70,6 +67,17 @@ function logIn(){
 
 $("#login-btn").live("click",function(){
 	logIn();	
+});
+$(function(){
+	var params2 = {
+		"method":"get_version"	
+	} 	
+	$.post("/upapi",JSON.stringify(params2),function(data){
+		if(data.retcode == 0){
+			var version="技术支持：重庆扬讯软件技术有限公司   "+data.version+"."+versionNum;
+			document.getElementById("copyright").innerHTML=version;
+		}	
+	});
 });
 
 </script> 
@@ -93,7 +101,7 @@ $("#login-btn").live("click",function(){
                 <span class="login-show login-show2">用户名和密码不能为空！</span>
                 <span class="login-show login-show3">用户名或密码错误！</span>
             </div>
-            <div class="copyright">技术支持：重庆扬讯软件技术有限公司</div>
+            <div class="copyright" id="copyright">技术支持：重庆扬讯软件技术有限公司</div>
         </div>
     </div>
 </body>

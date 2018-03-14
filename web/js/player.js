@@ -11,7 +11,7 @@ function startPlay(plugin, chanid,stype) {
 		//alert(e.message);
 	}
 }
-function startPlay2(plugin, chanid,stype) {
+function startPlay2(plugin, chanid,stype,onconnect,onplay) {
 	//plugin.contentWindow.startPlay(plugin, chanid, url, user, passw, "main");	
 	try {
 		//var plugin = document.getElementById(pluginid)
@@ -24,9 +24,11 @@ function startPlay2(plugin, chanid,stype) {
 		opt.user = user;
 		opt.passw = passw; 
 		opt.stype = stype;
+		opt.onconnect=onconnect;
+		opt.onplay=onplay;   
 		plugin.wsavc1 = new UpViewPlayer(opt);
 	} catch (e) {
-		//alert(e.message);
+		console.log(e.message);
 	}
 }
 /**
@@ -61,9 +63,11 @@ function pluginStopPlay2(plugin) {
 	try {
 		//var plugin = document.getElementById(pluginid)
 		//wsavc1.disconnect();
-		plugin.wsavc1.disconnect();
+//		plugin.wsavc1.disconnect();
+		player = plugin.wsavc1;
+		player.disconnect();
 	} catch (e) {
-		//alert(e.message);
+		console.log(e.message);
 	}
 }
 function pluginStopPlay(plugin) {
@@ -72,7 +76,7 @@ function pluginStopPlay(plugin) {
 		if (plugin.valid) {
 			plugin.StopRealPlay();
 		} else {
-			//alert("Plugin is not working :(");
+			console.log("Plugin is not working :(");
 		}
 	} catch (e) {
 		//alert(e.message);
@@ -86,3 +90,13 @@ function  pluginStopAndStartPlay(object, chanid) {
 		startPlay(object, chanid);
 	} catch (e){}
 }
+//使用canvas进行回放
+function startPlayByCanvas(plugin,id,url,user,passw){
+	  var opt = {};
+	  opt.id = id;
+	  opt.url = url;
+	  opt.canvas = plugin;
+	  opt.user =user;
+	  opt.passw = passw;
+	  canvasObject=new UpViewRcdPlayer(opt);
+	}

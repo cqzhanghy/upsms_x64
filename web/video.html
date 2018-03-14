@@ -9,6 +9,9 @@
 <script type="text/javascript" src="dist/jquery.cookie.js"></script>
 <script src="js/uc-ui.js" type="text/javascript"></script>
 <script src="js/player.js" type="text/javascript"></script>
+<script src="js/sonic.js" type="text/javascript"></script>
+<script src="js/modernizr.js" type="text/javascript"></script>
+<script src="js/upview.1.0.js" type="text/javascript"></script>
 <!--[if lte IE 7]>
 <script type="text/javascript" src="js/json2.js"></script>
 <![endif]-->
@@ -30,14 +33,23 @@ $("#video-show li").live("click",function(e){
 var addr = url;
 var num = 0;	
 var num2; //获取码流值
-var ff = window.top.isIE(false);   //判断浏览器是否安装控件
+var ff = Modernizr.canvas;
+var  check_IE;
+function check(){
+	 	var userAgent = navigator.userAgent;
+		var ie=userAgent.indexOf("compatible") > -1 && userAgent.indexOf("MSIE") > -1;
+		  if(ie){
+			return true;
+			 }
+		  if(isEdge = userAgent.indexOf("Edge") > -1 && !ie)
+		  {
+			 return true; 
+		 }
+		return false;
+	 }
 $(function(){
-	if(ff){
-	}else{
-		$.getScript("js/upview.js?v=" + new Date().getTime());
-	}
+    check_IE=check();
 });
-
 //动态创建js 并执行
 var type2;
 //视频列表点击 计算num位置
@@ -46,6 +58,8 @@ function playerCallBack(index){
 	$("#video-show li").eq(index).addClass("selected").siblings().removeClass("selected");
 	return index;
 }
+
+
 //获取码流
 function setMain(){
 	//得到单选按钮的值，并将其保存到cookie中
@@ -74,10 +88,14 @@ $(function(){
 	});
 	//窗口大小改变事件
 	window.onresize = function(){
-		$(".player").css("width",$("#video-show li").width());
+		$(".player").css("width",$("#video-show li").width()-1);
 		$(".player").css("height",$("#video-show li").height()-40);	
+		$(".cir-play").css("width",$("#video-show li").width());
+		$(".cir-play").css("height",$("#video-show li").height());	
 	}
 });
+//创建加载对象
+
 //点击左边,得到id
 window.top.registerFn(function(treeNode){
 	//右边视频列表点击选中 添加样式
@@ -110,10 +128,6 @@ window.top.registerFn(function(treeNode){
 			num = i;
 			fla = true;
 		}
-		/*if($(".video-show li").eq(i).html() == ''){
-			num = i;
-			break;
-		}	*/
 	}
 	if(fla == false && num2 == num3){
 		num = num3 -1;	
@@ -153,23 +167,29 @@ window.top.registerFn(function(treeNode){
 		/****************利用video传统的canvas方式播放******************************/	
 		var li = $("<span class='video-title'>"+video_title+"</span>"+"<span class='close' title='关闭'>"+"</span>"
 					+"<div class='index-iframe' id='iframe'>"
-						+"<canvas name='upview' class='view-object player' type='application/x-upview' width='100%' height='100%'>"
+						+"<canvas name='upview' class='view-object player' type='application/x-upview' width='100%' height='100%' id='text'>"
 						+"</canvas>"
-				+"</div>");
-		
+				+"</div>");	
 	}
 	//判断当这个有视频的情况，生成视频的同时清空原有的视频
-	if($("#video-show li").eq(num).find(".player").length != 0){	
+	
+	if($("#video-show li").eq(num).find(".close").length > 0){
+		var  plugin=$("#video-show li").eq(num).find(".close").parent().find(".player")[0]
+		
 		try{
-			pluginStopPlay($(this)[0]);
+			pluginStopPlay(plugin);
 		}catch(e){}
 		try{
-			pluginStopPlay2($(this)[0]);
+			pluginStopPlay2(plugin);
 		}catch(e){}
-		$("#video-show li").eq(num).empty();		
+		//$("#video-show li").eq(num).empty();		
 	}
-	$("#video-show li").eq(num).empty().append(li);
-		//得到已有视频的个数
+		
+		$("#video-show li").eq(num).find(".video-title").remove();
+		$("#video-show li").eq(num).find(".close").remove();
+		$("#video-show li").eq(num).find("#iframe").remove();
+		$("#video-show li").eq(num).append(li);
+		//将播放窗口选中
 		$("#video-show li").eq(num).addClass("selected").siblings().removeClass("selected");	
 		if(ff){
 			$("#video-show li").eq(num).find(".player").each(function(){
@@ -177,18 +197,17 @@ window.top.registerFn(function(treeNode){
 				startPlay($(this)[0],chanid,type2);
 			});		
 		}else{
-			/*setTimeout(function(){
-				
-			}, 500);*/
-			//startPlay2($("#video-show li").eq(num).find(".iframes")[0],chanid);
-			//startPlay2($("#video-show li").eq(num).find(".iframes")[0].contentWindow.document.find(".player")[0],chanid);
-			//alert($(".iframes").contentWindow.document.getElementById("sss").value);
 			//设置canvas的宽度
 			$("#video-show li").eq(num).find(".player").each(function(){
-				startPlay2($(this)[0],chanid,type2);
+				var point=$("#video-show li").eq(num);
+				var cir=creatCir(num,point);
+				startPlay2($(this)[0],chanid,type2,GetOnconnetc(cir,point),GetOnPlay(cir,point));
 			});	
-			$(".player").css("width",$("#video-show li").width());
+			$(".player").css("width",$("#video-show li").width()-1);
 			$(".player").css("height",$("#video-show li").height()-40);
+			$(".cir-play").css("width",$(".player").width());
+		    $(".cir-play").css("height",$(".player").height()-1);
+			
 		}		
 		
 		$("#video-show li").each(function(i){
@@ -210,25 +229,21 @@ window.top.registerFn(function(treeNode){
 			pluin.isInt = true;
 		});	
 },window.top.types.TREE_NODE_CLICK);
+
+
 //关闭视频
 $(".video-show li").find(".close").live("click",function(e){
+	 e.stopPropagation();
+	 $(this).parent().addClass("live2");
+	 $(this).parent().removeClass("live");	
+	 $(this).parent().removeClass("selected");	
 	if(ff){
-		 e.stopPropagation();
-		 $(this).parent().addClass("live2");
-		 $(this).parent().removeClass("live");	
-		 $(this).parent().removeClass("selected");	
-		 pluginStopPlay($(this).parent().find(".player")[0]);
-		 $(this).siblings().remove();	
-		 $(this).remove(); 			
+		 pluginStopPlay($(this).parent().find(".player")[0]);	
 	}else{
-		 e.stopPropagation();
-		 $(this).parent().addClass("live2");
-		 $(this).parent().removeClass("live");	
-		 $(this).parent().removeClass("selected");	
-		 pluginStopPlay2($(this).parent().find(".player")[0]);
-		 $(this).siblings().remove();
-		 $(this).remove();		
+		 pluginStopPlay2($(this).parent().find(".player")[0]);	
 	}
+	$(this).siblings().remove();	
+	$(this).remove(); 	
 });
 
 function setA(){
@@ -328,7 +343,7 @@ function downRun(){
                         </ul>
                     </li>
                     <li class="hide"><span class="video-play"></span>开始录像</li>
-                    <li class="hide"><span class="video-camera"></span>抓拍</li>
+                    <li class="camera"><span class="video-camera"></span>抓拍</li>
                 </ul>
             </div>
             <div class="title"><span class="icon"></span>设置默认码流</div>
@@ -343,8 +358,55 @@ function downRun(){
                         </td>
                     </tr>
                 </table>
+                 <div id="can" style="width:200px;height:150px; float:right;"  ></div>
+                 <a id="downLoad" hidden="hidden"></a>
             </div>
       </div>
     </div>
 </body>
 </html>
+<script>
+$(".camera").click(function(){
+		if(!ff)
+		{
+		 var canvas=$(".selected>#iframe>canvas")[0];
+		 if(typeof canvas==='undefined'){
+			 return;
+			 }
+		else{
+			    canvas.title=$(".selected>.video-title").text();
+				var type="jpeg";
+				var imgdata=canvas.toDataURL(type);
+				var fixtype=function(type){
+				    type=type.toLocaleLowerCase().replace(/jpg/i,'jpeg');
+					var r=type.match(/png|jpeg|bmp|gif/)[0];
+					return 'image/'+r;
+				};
+				imgdata=imgdata.replace(fixtype(type),'image/octet-stream');
+				var savaFile=function(data,filename){
+					var save_link;
+					if(check_IE){
+						
+						   return ;
+						}else{
+							save_link=document.createElementNS('http://www.w3.org/1999/xhtml', 'a');
+							save_link.href=data;
+					        save_link.download=filename;
+							var event=document.createEvent('MouseEvents');
+							event.initMouseEvent('click',true,false,window,0,0,0,0,0,false,false,false,false,0,null);
+						    save_link.dispatchEvent(event);
+							}
+					
+				};
+				
+				var time=new Date();
+				var filename=canvas.title+'_'+time.getFullYear()+'_'+(time.getMonth()+1) +'_'+time.getDate()+' '+time.getHours()+"_"+time.getMinutes()+"_"+time.getSeconds()+'.'+type;  
+				//注意咯 由于图片下载的比较少 就直接用当前几号做的图片名字
+				savaFile(imgdata,filename);
+		  }
+	 }
+		else{
+			   
+			}
+})
+</script>

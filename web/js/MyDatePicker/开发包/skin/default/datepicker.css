@@ -156,7 +156,7 @@
 /* 日期格的mouseover样式 TD */
 .WdateDiv .WdayOn{
 	cursor:pointer;
-	background-color:#C0EBEF;
+	
 }
 /* 周末日期格的样式 TD */
 .WdateDiv .Wwday{
@@ -177,7 +177,10 @@
 	background-color:#A9E4E9;
 }
 .WdateDiv .WspecialDay{
-	background-color:#66F4DF;
+	/*background-color:#66F4DF;*/
+	background-image: url(../images/My97DatePicker/markNormal.png);
+	background-repeat: no-repeat;
+	background-position: bottom right;
 }
 /* 其他月份的日期 */
 .WdateDiv .WotherDay{ 

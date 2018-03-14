@@ -18,13 +18,13 @@
 	//得到id
 	//var nodes = parent.getNodeById(parent.updateId);
 	function deleteNodes(d,data,initData){
+		
 		var id = data.id;
 		var params = {
-			"method":"del_node",
+			"method":"del_nodes",
 			"sessionid":session,
-			"id":id
+			"ids":data
 		}	
-
 		$.post("/upapi",JSON.stringify(params),function(data){
 			//swindow.top.validateSession(data);
 			if(data.retcode == 0){
